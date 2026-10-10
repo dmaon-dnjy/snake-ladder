@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snakes & Ladders — 4 Pieces · Stack to Evolve</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1120;--card:#1a1d32;--card2:#242847;--accent:#7c5cff;--text:#eef0ff;--muted:#8a8fb8;--border:rgba(255,255,255,0.08)}
+body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(600px 400px at 20% 0%, rgba(124,92,255,0.14), transparent 60%),radial-gradient(800px 500px at 90% 30%, rgba(255,77,109,0.09), transparent 60%),radial-gradient(700px 400px at 50% 100%, rgba(0,217,165,0.07), transparent 60%);pointer-events:none;z-index:-1}
+.header{max-width:1220px;margin:0 auto;padding:18px 20px 10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#7c5cff,#ff4d6d);display:grid;place-items:center;font-size:22px;box-shadow:0 8px 24px rgba(124,92,255,0.35)}
+.logo h1{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;letter-spacing:-0.5px}
+.logo h1 span{color:var(--accent)}
+.logo p{font-size:11px;color:var(--muted);margin-top:1px;letter-spacing:0.6px;text-transform:uppercase}
+.btn{border:none;cursor:pointer;font-family:inherit;font-weight:600;padding:9px 16px;border-radius:10px;font-size:13px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--card2)}
+.btn-primary{background:linear-gradient(135deg,#7c5cff,#5a36ff);color:white;box-shadow:0 4px 16px rgba(124,92,255,0.4)}
+.btn-primary:hover{transform:translateY(-1px)}
+.container{max-width:1220px;margin:0 auto;padding:10px 20px 30px;display:grid;grid-template-columns:1fr 380px;gap:20px}
+@media(max-width:940px){.container{grid-template-columns:1fr}}
+.board-wrap{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.board-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.board-header h2{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.legend{display:flex;gap:10px;font-size:11px;color:var(--muted);font-weight:600;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:4px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot.snake{background:#ff4d6d;box-shadow:0 0 8px rgba(255,77,109,0.6)} .dot.ladder{background:#00d9a5;box-shadow:0 0 8px rgba(0,217,165,0.6)}
+.board-outer{position:relative;background:#13152a;border-radius:16px;padding:8px;border:1px solid var(--border)}
+.board{position:relative;display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr);gap:3px;aspect-ratio:1;width:100%}
+.cell{background:#1e213d;border-radius:7px;position:relative;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,0.62);border:1px solid rgba(255,255,255,0.04);overflow:hidden}
+.cell.start{background:linear-gradient(135deg,#1e213d,#252a52)} .cell.finish{background:linear-gradient(135deg,#FFD70022,#FFA50033);border-color:rgba(255,215,0,0.35);color:#FFD700}
+.cell.snake-head{background:linear-gradient(135deg,#2a1830,#3d1e2e);border-color:rgba(255,77,109,0.35)} .cell.ladder-foot{background:linear-gradient(135deg,#0f2a24,#143d32);border-color:rgba(0,217,165,0.35)}
+.cell-num{position:absolute;top:3px;left:4px;font-size:9px;font-weight:800;opacity:0.9;z-index:2}
+.cell-icon{position:absolute;bottom:2px;right:3px;font-size:10px;z-index:2}
+.cell.highlight{outline:2px solid #7c5cff;outline-offset:-1px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{outline-color:rgba(124,92,255,0.85)}50%{outline-color:rgba(124,92,255,0.18)}}
+.tokens{position:absolute;inset:8px;pointer-events:none}
+.token{position:absolute;border-radius:50%;border:2.5px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.5),0 0 0 1px rgba(0,0,0,0.18);display:grid;place-items:center;font-weight:800;color:white;transition:all .38s cubic-bezier(0.34,1.56,0.64,1);z-index:5;pointer-events:auto;cursor:pointer;user-select:none;text-shadow:0 1px 2px rgba(0,0,0,0.6),0 0 4px rgba(0,0,0,0.3);-webkit-text-stroke:0.5px rgba(0,0,0,0.2)}
+.token.selectable{pointer-events:auto;cursor:pointer;animation:selPulse 1.1s infinite;outline:3px solid white;outline-offset:3px}
+@keyframes selPulse{0%,100%{transform:translate(-50%,-50%) scale(1.08)}50%{transform:translate(-50%,-50%) scale(1.18)}}
+.token.l1{width:26px;height:26px;font-size:13px}
+.token.l2{width:30px;height:30px;font-size:14px;border-width:3px}
+.token.l3{width:34px;height:34px;font-size:15px;border-width:3px}
+.token.l4{width:38px;height:38px;font-size:16px;border-width:3px}
+.token.merging{animation:mergePop .6s ease}
+@keyframes mergePop{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.5)}100%{transform:translate(-50%,-50%) scale(1)}}
+.svg-overlay{position:absolute;inset:8px;pointer-events:none;z-index:3;width:calc(100% - 16px);height:calc(100% - 16px)}
+.side{display:flex;flex-direction:column;gap:14px}
+.turn-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;position:relative;overflow:hidden}
+.turn-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cur-color,#7c5cff);transition:background .3s}
+.turn-label{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px}
+.turn-name{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;line-height:1;letter-spacing:-0.5px}
+.turn-sub{font-size:12px;color:var(--muted);margin-top:4px;min-height:16px}
+.dice-area{display:flex;align-items:center;gap:14px;margin-top:14px}
+.dice{width:68px;height:68px;border-radius:16px;background:linear-gradient(145deg,#242847,#1a1d32);border:1px solid var(--border);display:grid;place-items:center;font-size:34px;cursor:pointer;user-select:none;box-shadow:0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);transition:all .15s;flex-shrink:0}
+.dice:hover{transform:translateY(-1px)} .dice:active{transform:scale(0.97)} .dice.rolling{animation:shake .5s ease}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg) scale(1.05)}40%{transform:rotate(8deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(5deg)}}
+.dice-face{width:100%;height:100%;display:grid;place-items:center;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:13px;gap:2px}
+.dot-dice{width:10px;height:10px;background:white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.roll-btn{flex:1;background:var(--cur-color,#7c5cff);color:white;border:none;border-radius:14px;padding:13px 16px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;gap:8px}
+.roll-btn:disabled{opacity:.45;cursor:not-allowed}
+.roll-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+.choose-hint{background:rgba(124,92,255,0.12);border:1px solid rgba(124,92,255,0.25);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600;margin-top:10px;display:none;align-items:center;gap:8px}
+.choose-hint.show{display:flex}
+.pieces-tray{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;margin-top:12px}
+.piece-slot{background:rgba(255,255,255,0.04);border:1.5px solid var(--border);border-radius:12px;padding:8px 6px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.piece-slot.selectable{border-color:var(--cur-color,#7c5cff);background:rgba(124,92,255,0.12);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.piece-slot.selected{border-color:white;box-shadow:0 0 0 2px var(--cur-color,#7c5cff),0 4px 12px rgba(0,0,0,0.2)}
+.piece-slot.won{opacity:.9;border-color:rgba(255,215,0,0.5);background:rgba(255,215,0,0.08)}
+.piece-slot .ps-icon{width:30px;height:30px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;font-weight:800;font-size:11px;color:white;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.piece-slot .ps-icon.l1{width:28px;height:28px} .piece-slot .ps-icon.l2{width:30px;height:30px} .piece-slot .ps-icon.l3{width:32px;height:32px} .piece-slot .ps-icon.l4{width:34px;height:34px}
+.ps-pos{font-size:11px;font-weight:800} .ps-lvl{font-size:10px;color:var(--muted);font-weight:600}
+.lvl-badge{position:absolute;top:4px;right:4px;font-size:9px;font-weight:800;padding:2px 5px;border-radius:20px;background:rgba(0,0,0,0.5);color:white;border:1px solid rgba(255,255,255,0.2)}
+.players-card,.log-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
+.card-title{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.player-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:12px;margin-bottom:6px;border:1px solid transparent;transition:all .2s;background:rgba(255,255,255,0.02)}
+.player-row.active{background:var(--row-bg, rgba(124,92,255,0.12));border-color:var(--row-color, #7c5cff);box-shadow:0 2px 12px rgba(0,0,0,0.15)}
+.player-row.winner{background:linear-gradient(135deg,rgba(255,215,0,0.14),rgba(255,165,0,0.07));border-color:rgba(255,215,0,0.4)}
+.p-avatar{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:13px;color:white;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.25)}
+.p-info{flex:1;min-width:0} .p-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-pos{font-size:11px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.mini-pieces{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.mini{font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:inline-flex;align-items:center;gap:3px}
+.mini.l2{border-color:rgba(255,255,255,0.25)} .mini.l3{} .mini.l4{}
+.p-badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;background:rgba(255,255,255,0.08);color:var(--muted);white-space:nowrap}
+.p-badge.turn{color:white}
+.log{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;padding-right:4px}
+.log::-webkit-scrollbar{width:4px} .log::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:99px}
+.log-entry{font-size:12px;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border-left:3px solid transparent;line-height:1.4;display:flex;gap:8px;align-items:flex-start}
+.log-entry.snake{border-left-color:#ff4d6d;background:rgba(255,77,109,0.08)} .log-entry.ladder{border-left-color:#00d9a5;background:rgba(0,217,165,0.08)}
+.log-entry.merge{border-left-color:#FFD700;background:rgba(255,215,0,0.1);font-weight:600} .log-entry.win{border-left-color:#FFD700;background:rgba(255,215,0,0.12);font-weight:700}
+.log-entry.roll{border-left-color:#7c5cff}
+.overlay{position:fixed;inset:0;background:rgba(6,8,20,0.72);backdrop-filter:blur(10px);display:grid;place-items:center;z-index:100;padding:20px}
+.modal{background:#1a1d32;border:1px solid rgba(255,255,255,0.10);border-radius:20px;padding:26px;max-width:500px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);max-height:90vh;overflow:auto}
+.modal h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
+.modal p{color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:16px}
+.name-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+@media(max-width:480px){.name-grid{grid-template-columns:1fr}}
+.field label{font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.field input{width:100%;background:#13152a;border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--accent)} .field input:disabled{opacity:.35}
+.color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.rules{font-size:12px;color:var(--muted);background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;line-height:1.6;margin-bottom:16px}
+.rules strong{color:var(--text)}
+.win-overlay{position:fixed;inset:0;background:rgba(6,8,20,0.78);backdrop-filter:blur(12px);display:grid;place-items:center;z-index:90;padding:20px;text-align:center}
+.win-box{background:linear-gradient(145deg,#1e213d,#242847);border:1px solid rgba(255,215,0,0.25);border-radius:20px;padding:36px 28px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:95;overflow:hidden}
+.confetti i{position:absolute;width:10px;height:10px;top:-10px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.lvl-legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.lvl-legend span{font-size:10px;font-weight:700;padding:4px 8px;border-radius:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:inline-flex;align-items:center;gap:4px}
+.cell.card-cell{background:linear-gradient(135deg,#1a1640,#241e55);border-color:rgba(124,92,255,0.35);box-shadow:inset 0 0 0 1px rgba(255,215,0,0.12)}
+.cell.card-cell .cell-icon{font-size:11px}
+.cell.money{background:linear-gradient(135deg,#1a2a12,#2a3d18);border-color:rgba(255,215,0,0.45);box-shadow:inset 0 0 0 1px rgba(255,215,0,0.18)}
+.cell.hurricane{background:linear-gradient(135deg,#0e1d2a,#143044);border-color:rgba(46,196,255,0.45);box-shadow:inset 0 0 0 1px rgba(46,196,255,0.18)}
+.cell.swamp{background:linear-gradient(135deg,#1d1a12,#2e2614);border-color:rgba(160,120,40,0.45);box-shadow:inset 0 0 0 1px rgba(160,120,40,0.18)}
+.cell.hurricane .cell-icon,.cell.swamp .cell-icon,.cell.money .cell-icon{font-size:11px}
+.cell.death-trap{background:linear-gradient(135deg,#3a0d18,#5a1322);border-color:rgba(255,77,109,0.5);box-shadow:inset 0 0 0 1px rgba(255,77,109,0.25)}
+.cell.elevator{background:linear-gradient(135deg,#102433,#16354d);border-color:rgba(46,196,255,0.45);box-shadow:inset 0 0 0 1px rgba(46,196,255,0.18)}
+.cell.elevator .cell-icon{font-size:11px}
+.status-badge{position:absolute;top:-5px;left:-5px;font-size:8px;font-weight:800;padding:1px 4px;border-radius:20px;border:1px solid rgba(255,255,255,0.9);line-height:1}
+.status-badge.hurr{background:#2ec4ff;color:#00131a}
+.status-badge.swamp{background:#8d6e2a;color:white}
+.status-badge.cooldown{background:rgba(0,217,165,0.7);color:#00131a}
+.status-badge.frozen{background:#5a9bd5;color:#fff}
+.piece-slot.locked{opacity:0.5;filter:grayscale(0.2)}
+.piece-slot.hurricane{border-color:#2ec4ff}
+.piece-slot.swamp{border-color:#8d6e2a}
+.piece-slot.cooldown{border-color:#00d9a5;box-shadow:0 0 0 2px #00d9a5}
+
+.deck-bar{display:flex;gap:8px;margin-bottom:10px}
+.deck-pill{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:8px 10px;text-align:center}
+.deck-pill b{font-size:14px} .deck-pill span{font-size:10px;color:var(--muted);display:block;text-transform:uppercase;letter-spacing:0.7px;font-weight:700}
+.hand{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.shop-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
+.shop-item-icon{font-size:24px;width:32px;text-align:center}
+.hand-card{font-size:11px;font-weight:700;padding:6px 8px;border-radius:10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.05);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.hand-card:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.18)}
+.hand-card.special{border-color:rgba(255,215,0,0.45);background:rgba(255,215,0,0.12)}
+.hand-card.gun{border-color:rgba(255,77,109,0.5);background:rgba(255,77,109,0.12)}
+.coin-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,215,0,0.14);border:1px solid rgba(255,215,0,0.35);padding:3px 8px;border-radius:20px;font-weight:800;font-size:12px}
+.card-modal-card{background:linear-gradient(145deg,#242847,#1e213d);border:1.5px solid rgba(255,215,0,0.25);border-radius:16px;padding:16px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.35)}
+.card-modal-card .cm-icon{font-size:36px;margin-bottom:6px}
+.card-modal-card h3{font-size:17px;margin-bottom:4px} .card-modal-card p{font-size:12px;color:var(--muted);line-height:1.5}
+.abilities-panel{background:linear-gradient(160deg,#1c1f38,#15172b);border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:10px}
+.abilities-panel .card-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.card-deck-area{display:flex;justify-content:center;margin-top:8px;min-height:150px;align-items:center}
+.card-flip{width:130px;height:182px;position:relative;perspective:900px}
+.card-flip.flipped .card-inner{transform:rotateY(180deg)}
+.card-flip .card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.7,.3,1)}
+.card-flip .card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;box-shadow:0 14px 38px rgba(0,0,0,0.45)}
+.card-flip .card-back{background:repeating-linear-gradient(45deg,#2a2150,#2a2150 8px,#352a66 8px,#352a66 16px);border:2px solid rgba(124,92,255,0.55);color:#cdbfff;font-size:46px;font-weight:800}
+.card-flip .card-back span{font-size:12px;letter-spacing:3px;font-weight:700}
+.card-flip .card-front{transform:rotateY(180deg);background:linear-gradient(145deg,#242847,#1e213d);border:1.5px solid rgba(255,215,0,0.3)}
+.card-flip .card-front .cf-icon{font-size:44px;margin-bottom:4px}
+.card-flip .card-front .cf-name{font-size:17px;font-weight:800}
+.card-flip .card-front .cf-desc{font-size:12px;color:var(--muted);line-height:1.45;padding:0 12px}
+.card-flip.draw-anim{animation:cardDraw .35s ease}
+@keyframes cardDraw{0%{transform:translateY(18px) scale(.9);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+.merge-modal-card{background:linear-gradient(145deg,#242847,#1e213d);border:1.5px solid rgba(255,215,0,0.4);border-radius:16px;padding:18px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.35)}
+.merge-modal-card .m-icon{font-size:42px;margin-bottom:6px}
+.merge-modal-card h3{font-size:18px;margin-bottom:6px}
+.merge-modal-card p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.shoot-hint{background:rgba(255,77,109,0.12);border:1px solid rgba(255,77,109,0.3);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600;margin-top:10px;display:none}
+.shoot-hint.show{display:block}
+.target-token{outline:2.5px dashed #ff4d6d !important;outline-offset:2px;animation:targetPulse 1s infinite}
+@keyframes targetPulse{0%,100%{outline-color:rgba(255,77,109,0.9)}50%{outline-color:rgba(255,77,109,0.25)}}
+.ability-target{outline:2.5px dashed #00d9a5 !important;outline-offset:3px;animation:abilityPulse 1s infinite}
+@keyframes abilityPulse{0%,100%{outline-color:rgba(0,217,165,0.9)}50%{outline-color:rgba(0,217,165,0.3)}}
+.move-pick-target{outline:2.5px dashed #ffd700 !important;outline-offset:3px;animation:abilityPulse 1s infinite;cursor:pointer}
+.lobby{position:fixed;inset:0;background:rgba(10,11,22,0.85);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200}
+.lobby.show{display:flex}
+.lobby-box{background:linear-gradient(160deg,#1c1f38,#15172b);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:26px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.lobby-box h2{font-size:22px;margin-bottom:6px}
+.lobby-box p.sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.lobby-row{display:flex;gap:8px;margin-bottom:12px}
+.lobby-row input{flex:1}
+.lobby-code{font-size:30px;font-weight:800;letter-spacing:6px;text-align:center;background:rgba(124,92,255,0.12);border:1px dashed rgba(124,92,255,0.5);border-radius:12px;padding:12px;margin:10px 0;color:#cdbfff}
+.lobby-players{list-style:none;padding:0;margin:10px 0}
+.lobby-players li{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;background:rgba(255,255,255,0.04);font-size:13px}
+.lobby-players li .dot{width:10px;height:10px;border-radius:50%}
+.lobby-players li.host-tag{margin-left:auto;font-size:10px;background:rgba(255,215,0,0.15);color:#ffd700;padding:2px 7px;border-radius:20px}
+.lobby-status{font-size:12px;color:var(--muted);min-height:16px;margin-top:6px}
+.lobby-sep{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;margin:14px 0}
+.lobby-sep::before,.lobby-sep::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1)}
+.conn-pill{position:fixed;top:10px;right:12px;z-index:210;font-size:11px;padding:5px 10px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:none}
+.conn-pill.show{display:block}
+.conn-pill.on{color:#00d9a5;border-color:rgba(0,217,165,0.4)}
+.conn-pill.off{color:#ff4d6d;border-color:rgba(255,77,109,0.4)}
+
+</style>
+</head>
+<body>
+<div class="conn-pill" id="connPill">● connecting…</div>
+<div class="lobby show" id="lobby">
+  <div class="lobby-box">
+    <h2>🌐 Play Online</h2>
+    <p class="sub">One player creates a room (the <b>host</b>); others join with the room code. The host starts the game for everyone.</p>
+    <div class="lobby-row">
+      <input id="lobbyName" class="input" placeholder="Your name" value="" maxlength="12" style="flex:1" />
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="btnCreate">➕ Create Room (Host)</button>
+    <div class="lobby-sep">or join an existing room</div>
+    <div class="lobby-row">
+      <input id="lobbyCode" class="input" placeholder="ROOM CODE" maxlength="4" style="flex:1;text-transform:uppercase;letter-spacing:4px;font-weight:700" />
+      <button class="btn btn-ghost" id="btnJoin">Join</button>
+    </div>
+    <div id="lobbyRoom" style="display:none">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Room code — share this with friends:</div>
+      <div class="lobby-code" id="lobbyCodeBig">····</div>
+      <ul class="lobby-players" id="lobbyPlayers"></ul>
+      <div id="lobbyPiecesRow" style="display:none;margin:10px 0 4px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">🖐 Pieces each player starts with (host sets this):</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" style="flex:1;padding:6px 0;font-size:12px" data-lobby-pieces="1">1</button>
+          <button class="btn btn-ghost" style="flex:1;padding:6px 0;font-size:12px" data-lobby-pieces="2">2</button>
+          <button class="btn btn-ghost" style="flex:1;padding:6px 0;font-size:12px" data-lobby-pieces="3">3</button>
+          <button class="btn btn-primary" style="flex:1;padding:6px 0;font-size:12px" data-lobby-pieces="4">4</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="btnStart" disabled>▶ Start Game</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px" id="btnLeaveLobby">Leave</button>
+    </div>
+    <div class="lobby-status" id="lobbyStatus"></div>
+    <div class="lobby-sep">or</div>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center" id="btnLocal">🖥️ Play Locally (same device)</button>
+  </div>
+</div>
+<header class="header">
+  <div class="logo"><div class="logo-icon">🐍</div><div><h1><span>Snakes</span> & Ladders</h1><p>1–4 pieces each · coins · card deck · shooters · Lv1→Titan</p></div></div>
+  <div style="display:flex;gap:8px"><button class="btn btn-ghost" id="btnRules">📜 Rules</button><button class="btn btn-ghost" id="btnNew">↻ New Game</button></div>
+</header>
+
+<div class="container">
+  <div class="board-wrap">
+    <div class="board-header"><h2>Board — 1 to 100</h2>
+      <div class="legend"><span style="color:#FFD700">🃏 Card</span><span style="color:#FFD700">🪙 Money</span><span style="color:#2ec4ff">🌀 Hurricane</span><span style="color:#2ec4ff">🛗 Elevator</span><span style="color:#8d6e2a">🐊 Swamp</span><span style="color:#ff4d6d">💀 Death Trap 13</span><span>⭐ Stack</span></div>
+    </div>
+    <div class="deck-bar">
+      <div class="deck-pill"><b id="deckCount">—</b><span>🃏 Deck left</span></div>
+      <div class="deck-pill"><b id="deckDiscard">0</b><span>Discard</span></div>
+      <div class="deck-pill"><b>11·22·33·44·55·66·77·88·99</b><span>Card cells</span></div>
+    </div>
+    <div class="lvl-legend">
+      <span style="border-color:rgba(255,255,255,0.15)">● Lv1 Piece</span>
+      <span style="border-color:rgba(255,255,255,0.3)">⬢ Lv2 Power</span>
+      <span style="border-color:rgba(255,215,0,0.4);background:rgba(255,215,0,0.08)">👑 Lv3 Champion</span>
+      <span style="border-color:rgba(255,215,0,0.7);background:rgba(255,215,0,0.14)">💎 Lv4 Titan</span>
+    </div>
+    <div class="board-outer"><div class="board" id="board"></div><svg class="svg-overlay" id="svgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><div class="tokens" id="tokens"></div></div>
+  </div>
+
+  <div class="side">
+    <div class="turn-card" id="turnCard">
+      <div class="turn-label" id="turnLabel">Current turn</div>
+      <div class="turn-name" id="turnName">—</div>
+      <div class="turn-sub" id="turnSub">Press Roll to start</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <span class="coin-badge" id="coinBadge">🪙 0</span>
+        <span style="font-size:11px;color:var(--muted);align-self:center" id="handCount">Hand: 0</span>
+        <span style="font-size:11px;color:var(--muted);align-self:center" id="deckMini"></span>
+      </div>
+      <div class="dice-area"><div class="dice" id="dice" title="Click to roll or press Space"><div style="font-size:30px">🎲</div></div><button class="roll-btn" id="rollBtn">🎲 Roll Dice</button></div>
+      <div class="choose-hint" id="chooseHint">👆 Choose a piece to move <span id="rollValBadge" style="background:white;color:#1a1d32;padding:2px 8px;border-radius:20px;font-weight:800;margin-left:auto"></span></div>
+      <div class="pieces-tray" id="piecesTray"></div>
+      <div id="handArea" style="margin-top:10px"></div>
+      <div class="shoot-hint" id="shootHint"></div>
+      <div class="roll-hint">Roll <b>6</b> = extra turn · 🪙 +1 on money · 🌀 reverse next · 🐊 skip next · ⏳ moved piece skips next turn</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-ghost" style="flex:1;padding:6px;font-size:13px" id="shopBtn" onclick="openShop()">🛒 Shop</button>
+      </div>
+      <div class="abilities-panel" id="abilitiesPanel" style="display:none">
+        <div class="card-title"><span>⚔️ Your Abilities</span></div>
+        <div id="abilitiesList" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div class="players-card"><div class="card-title"><span>Players & Pieces</span><span id="roundInfo" style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">Round 1</span></div><div id="playersList"></div></div>
+    <div class="log-card"><div class="card-title"><span>Game Log</span><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" id="clearLog">Clear</button></div><div class="log" id="log"></div></div>
+  </div>
+</div>
+
+<div class="overlay" id="shopOverlay" style="display:none"><div class="modal" style="max-width:400px">
+  <h2>🛒 Shop — Spend your 🪙</h2>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Your balance: <b style="color:var(--accent)">🪙 <span id="shopCoins">0</span></b>. Each item is unique — once bought, it's gone for everyone!</p>
+  <div id="shopGrid"></div>
+  <div style="margin-top:12px;text-align:center">
+    <button class="btn btn-ghost" style="padding:6px 16px;font-size:12px" onclick="closeShop()">✕ Close</button>
+  </div>
+</div></div>
+
+<div class="overlay" id="setupOverlay" style="display:none"><div class="modal">
+  <p>Each player gets <b>1–4 pieces</b> (choose below, default 4, Lv1) & <b>3 🪙</b>. Land on <b>11·22·33·44·55·66·77·88·99</b> to choose: draw a face-down card (flip to reveal — you <b>keep it in hand</b> and play it on a later turn!) or take 1 🪙. Beware 💀 <b>13</b> — the Death Trap destroys any piece that lands there! 🛗 Elevators ride one row up/down. Tons of empty/coin/move cards; only <b>ONE</b> of each special (♜ rook ♝ bishop ♛ queen 🔄 swap). Visit the 🛒 Shop during your turn to buy abilities with 🪙 — you can either Roll & Move OR Use an Ability, not both!</p>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="btn btn-ghost" style="flex:1" data-players="2">2 Players</button>
+    <button class="btn btn-ghost" style="flex:1" data-players="3">3 Players</button>
+    <button class="btn btn-primary" style="flex:1" data-players="4">4 Players</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+    <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;white-space:nowrap">Pieces each: </label>
+    <button class="btn btn-ghost" style="flex:1" data-pieces="1">1</button>
+    <button class="btn btn-ghost" style="flex:1" data-pieces="2">2</button>
+    <button class="btn btn-ghost" style="flex:1" data-pieces="3">3</button>
+    <button class="btn btn-primary" style="flex:1" data-pieces="4">4</button>
+  </div>
+  <div id="piecesNote" style="font-size:11px;color:var(--muted);margin-bottom:10px">Each player starts with <b>4 pieces</b> (Lv1).</div>
+  <div class="name-grid" id="nameGrid"></div>
+  <div class="rules"><strong>Piece evolution:</strong> Lv1(1)+Lv1→Lv2 Power ⬢. Lv2+Lv1→Lv3 Champion 👑. Lv2+Lv2 / 3+1 → Lv4 Titan 💎 (max). When your pieces share a cell you <b>choose</b> to merge (level up) or keep them separate. <b>Coins, cards & shooters</b> below.</div>
+  <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px" id="startBtn">Start Game →</button>
+</div></div>
+
+<div class="overlay" id="rulesOverlay" style="display:none"><div class="modal">
+  <h2>📜 Rules — Cards & Shooters Edition</h2>
+  <div class="rules" style="font-size:13px">
+    <p><strong>Pieces:</strong> 1–4 per player (set at setup, default 4), Lv1→Titan (1–4). Land on a cell already holding your own piece(s) and you get a <b>choice</b>: level up (merge — levels sum, cap 4) or keep them separate.</p>
+    <p><strong>Turn:</strong> Roll 1–6, choose a piece. Exact 100 to win. 6 = extra turn.</p>
+    <p><strong>🃏 Card cells 11·22·33·44·55·66·77·88·99:</strong> On landing you choose: take <b>1 🪙</b> <em>or</em> draw a card. The card stays face-down until you draw, then flips to reveal it — once drawn, you take it into your <b>hand</b> (no switching to a coin). You play cards from hand on your turn <b>before rolling</b>. 💀 <strong>Death Trap 13:</strong> any piece that lands on 13 is destroyed and sent back home. Deck: lots of ⬜ Empty (discard), 🪙 coins (+1/+2/+3 & penalties -1/-2), ➡️ moves (+2/+4/+6, -2/-4/-6, ⬆️ row up +1, ⬇️ row down -1 — pick a piece to move), and specials. Shuffles when empty.</p>
+    <p><strong>⚔️ Combat:</strong> When a piece lands on a cell held by an opponent's piece, the opponent's piece is immediately <b>destroyed</b> and removed from the board — just like classic Snakes & Ladders. No coin toss, no duel. The attacker keeps their piece on the cell.
+    <p><strong>Specials — only ONE each:</strong> ♜ Rook Shooter, ♝ Bishop Shooter, ♛ Queen Shooter, 🔄 Swap. All cards are kept in hand.</p>
+    <p><strong>🔫 Shooters:</strong> Before rolling, spend a gun charge to shoot an opponent piece <b>back to Start</b>. Rook = same row/col (like rook in chess), Bishop = diagonal (like elephant/bishop), Queen = either (like queen). Shooter piece must be on board; target must be on board and in line. Cost 1 charge.</p>
+    <p><strong>🔄 Swap:</strong> Play from hand before rolling — pick one of YOUR pieces, then an opponent piece; they trade squares.</p>
+    <p><strong>🪙 Coins:</strong> Start with 3. 🪙 Money cells (+1 when any piece lands there) give bonus coins.<br>🌀 <b>Hurricane:</b> when piece lands there, its NEXT move goes backward -roll, once only.<br>🐊 <b>Swamp:</b> when piece lands there, that SPECIFIC piece skips its next turn (other pieces still playable).<br>🛗 <b>Elevator:</b> when a piece lands on it, it rides exactly one row up (⬆️) or down (⬇️) to the cell directly above/below in the same column — never to a fatal or special cell. Special cells are random each game (8 money, 5 hurricane, 5 swamp, 8 elevator) and never overlap cards/1/100/💀13.</p>
+    <p><strong>⏳ Cooldown:</strong> After moving a piece, that piece skips the player's next turn only, then becomes available again. Each piece has an independent cooldown counter. Anti-deadlock ensures you always have at least one playable piece.</p>
+    <p><strong>🧊 Freeze:</strong> The Wizard ability freezes an opponent piece for 2 full turns. While frozen, the piece cannot move, be chosen, or participate in merges. The freeze expires automatically.</p>
+    <hr style="border-color:var(--border);margin:10px 0">
+    <p><strong>🛒 Shop & Abilities:</strong> During your turn, you may either <b>Roll & Move</b> <em>or</em> <b>Use an Ability</b> — you cannot do both in the same turn.</p>
+    <p><strong>Shop items (one of each globally):</p>
+    <ul style="margin:6px 0;font-size:12px;line-height:1.5">
+      <li><b>♜ Rook Gun</b> — 5 🪙. Shoot horizontally/vertically (like a rook). <b>Destroy</b> a target piece. Single-use.</li>
+      <li><b>♝ Bishop Gun</b> — 10 🪙. Shoot diagonally (like a bishop). <b>Destroy</b> a target piece. Single-use.</li>
+      <li><b>♛ Queen Gun</b> — 18 🪙. Shoot horizontally, vertically, or diagonally (like a queen). <b>Destroy</b> a target piece. Single-use.</li>
+      <li><b>🧙 Wizard</b> — 25 🪙. Freeze an opponent piece for 2 turns. Single-use.</li>
+    </ul>
+    <p style="font-size:12px">Open the Shop (🛒 button) during your turn, spend coins, and the ability appears in your <b>Abilities</b> panel. Click it to enter targeting mode — valid targets are highlighted. Click a valid target to execute, or cancel. Using an ability ends your turn immediately.</p>
+  </div><button class="btn btn-primary" style="width:100%;justify-content:center" id="closeRules">Got it</button>
+</div></div>
+
+<div class="win-overlay" id="winOverlay" style="display:none"><div class="win-box"><div style="font-size:48px;margin-bottom:10px">🏆</div><h2 id="winTitle">Player wins!</h2><p id="winSub"></p><div style="display:flex;gap:10px;justify-content:center"><button class="btn btn-primary" id="playAgain">Play Again</button><button class="btn btn-ghost" id="changePlayers">Change Players</button></div></div></div>
+<div class="overlay" id="mergeOverlay" style="display:none"><div class="modal" style="max-width:420px"><div class="merge-modal-card" id="mergeBox"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-ghost" style="flex:1" id="mergeKeep">Keep Separate</button><button class="btn btn-primary" style="flex:1" id="mergeLevelUp">⬆ Level Up →</button></div></div></div>
+<div class="overlay" id="cardOverlay" style="display:none"><div class="modal" style="max-width:420px">
+  <h2 id="cardOverlayTitle">🃏 Card cell</h2>
+  <p id="cardOverlaySub" style="font-size:12px">What would you like to do?</p>
+  <div class="card-deck-area" id="cardDeckArea">
+    <div class="card-flip" id="cardFlip"><div class="card-inner">
+      <div class="card-face card-back">🂠<span>CARD</span></div>
+      <div class="card-face card-front" id="cardFront"></div>
+    </div></div>
+  </div>
+  <div class="card-actions" id="cardChoiceActions" style="display:flex;gap:8px;margin-top:14px">
+    <button class="btn btn-ghost" style="flex:1" id="cardTakeCoin">🪙 Take 1 coin</button>
+    <button class="btn btn-primary" style="flex:1" id="cardDraw">🎴 Draw a card</button>
+  </div>
+  <div class="card-actions" id="cardRevealActions" style="display:none;gap:8px;margin-top:14px">
+    <button class="btn btn-primary" style="flex:1" id="cardConfirm">Take Card →</button>
+  </div>
+  <div style="text-align:center;margin-top:8px"><button class="btn btn-ghost" style="font-size:12px;padding:6px 10px" id="cardReshuffleHint" disabled>Deck reshuffles when empty</button></div>
+</div></div>
+<div class="confetti" id="confetti"></div>
+
+<script>
+const SNAKES={}; // no snakes on the board
+const CARD_CELLS=[11,22,33,44,55,66,77,88,99];
+const DEATH_TRAP=13; // 💀 any piece landing here is destroyed and sent home
+// An elevator rides the piece exactly ONE visual row up (⬆️) or down (⬇️),
+// to the cell directly above / below in the same visual column (zigzag board).
+const ELEVATOR_COUNT=8;
+let ELEVATOR_CELLS=[];
+let ELEV_DIR={}; // n -> +1 (up, ⬆️) or -1 (down, ⬇️); fixed per cell so direction is predictable
+let MONEY_CELLS=[], HURRICANE_CELLS=[], SWAMP_CELLS=[];
+// visual up/down neighbour on the boustrophedon board (same visual column, one row)
+function visualUp(n){ const {r,c}=getRC(n); if(r>=9) return null; const nr=r+1; const nc=nr%2===1?9-c:c; return nr*10+nc+1; }
+function visualDown(n){ const {r,c}=getRC(n); if(r<=0) return null; const nr=r-1; const nc=nr%2===1?9-c:c; return nr*10+nc+1; }
+// an elevator must never deliver onto a death trap, a card cell, another elevator, start or finish
+function elevDestBad(n){ return n===DEATH_TRAP || n===1 || n===100 || CARD_CELLS.includes(n) || ELEVATOR_CELLS.includes(n); }
+function generateSpecialCells(){
+  ELEVATOR_CELLS=[]; ELEV_DIR={};
+  const baseForbidden=new Set([...CARD_CELLS, DEATH_TRAP, 1, 100]);
+  const validDirsBase = n => { const u=visualUp(n), d=visualDown(n); const dirs=[]; if(u!==null && !baseForbidden.has(u) && !ELEVATOR_CELLS.includes(u)) dirs.push(1); if(d!==null && !baseForbidden.has(d) && !ELEVATOR_CELLS.includes(d)) dirs.push(-1); return dirs; };
+  let pool=[]; for(let n=2;n<=99;n++) if(!baseForbidden.has(n) && validDirsBase(n).length) pool.push(n);
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  ELEVATOR_CELLS = pool.splice(0,ELEVATOR_COUNT).sort((a,b)=>a-b);
+  ELEVATOR_CELLS.forEach(n=>{
+    const u=visualUp(n), d=visualDown(n); const opts=[];
+    if(u!==null && !elevDestBad(u)) opts.push(1);
+    if(d!==null && !elevDestBad(d)) opts.push(-1);
+    ELEV_DIR[n]= opts.length ? opts[Math.floor(Math.random()*opts.length)] : 1;
+  });
+  MONEY_CELLS = pool.splice(0,16).sort((a,b)=>a-b);
+  HURRICANE_CELLS = pool.splice(0,5).sort((a,b)=>a-b);
+  SWAMP_CELLS = pool.splice(0,5).sort((a,b)=>a-b);
+}
+function isMoney(n){ return MONEY_CELLS.includes(n); }
+function isHurricane(n){ return HURRICANE_CELLS.includes(n); }
+function isSwamp(n){ return SWAMP_CELLS.includes(n); }
+function isElevator(n){ return ELEVATOR_CELLS.includes(n); }
+function elevatorDest(n){ // ride exactly one visual row up or down, per the cell's fixed direction
+  const dir = ELEV_DIR[n] || 1;
+  return dir===1 ? visualUp(n) : visualDown(n);
+}
+function elevatorArrow(n){ return (ELEV_DIR[n]||1)===1 ? '⬆️' : '⬇️'; }
+const COLORS=['#ff4d6d','#2ec4ff','#00d9a5','#ffb020'];
+const COLOR_BG=['rgba(255,77,109,0.12)','rgba(46,196,255,0.12)','rgba(0,217,165,0.12)','rgba(255,176,32,0.12)'];
+const LEVEL_NAME={1:'Piece',2:'Power',3:'Champion',4:'Titan'};
+const LEVEL_ICON={1:'',2:'⬢',3:'👑',4:'💎'};
+
+function buildDeck(){
+  const deck=[];
+  const push=(n,card)=>{ for(let i=0;i<n;i++) deck.push({...card,uid:Math.random().toString(36).slice(2,7)}); };
+  push(22,{kind:'empty', name:'Empty', icon:'⬜', desc:'Nothing happens.'});
+  push(10,{kind:'coin', name:'+1 Coin', icon:'🪙', desc:'Gain 1 coin.', coins:1});
+  push(6,{kind:'coin', name:'+2 Coins', icon:'🪙', desc:'Gain 2 coins.', coins:2});
+  push(3,{kind:'coin', name:'+3 Coins', icon:'💰', desc:'Jackpot — gain 3 coins!', coins:3});
+  push(6,{kind:'coin', name:'-1 Coin', icon:'💸', desc:'Penalty — lose 1 coin.', coins:-1});
+  push(3,{kind:'coin', name:'-2 Coins', icon:'💸', desc:'Heavy penalty — lose 2 coins.', coins:-2});
+  push(6,{kind:'move', name:'+2 Steps', icon:'➡️', desc:'This piece moves 2 forward.', delta:2});
+  push(6,{kind:'move', name:'+4 Steps', icon:'⏩', desc:'This piece sprints 4 forward.', delta:4});
+  push(4,{kind:'move', name:'+6 Steps', icon:'🚀', desc:'Dash 6 forward!', delta:6});
+  push(5,{kind:'move', name:'-2 Steps', icon:'↩️', desc:'Slip 2 backward.', delta:-2});
+  push(4,{kind:'move', name:'-4 Steps', icon:'⬅️', desc:'Knocked 4 back.', delta:-4});
+  push(4,{kind:'move', name:'-6 Steps', icon:'💨', desc:'Blown 6 back!', delta:-6});
+  push(4,{kind:'move', name:'Row Up', icon:'⬆️', desc:'This piece moves 1 cell forward (one row up).', delta:1, row:true});
+  push(4,{kind:'move', name:'Row Down', icon:'⬇️', desc:'This piece moves 1 cell back (one row down).', delta:-1, row:true});
+  // specials — only ONE copy each
+  deck.push({kind:'gun', gun:'rook', name:'Rook Shooter', icon:'♜', desc:'Grants Rook shot — hit any piece in same row/col.', uid:'S1'});
+  deck.push({kind:'gun', gun:'bishop', name:'Bishop Shooter', icon:'♝', desc:'Grants Bishop shot — hit any diagonal piece.', uid:'S2'});
+  deck.push({kind:'gun', gun:'queen', name:'Queen Shooter', icon:'♛', desc:'Grants Queen shot — hit rook OR diagonal. Rarest!', uid:'S3'});
+  deck.push({kind:'swap', name:'Swap Piece', icon:'🔄', desc:'Swap one of your pieces with an opponent piece.', uid:'S4'});
+  for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+  return deck;
+}
+let deck=[], discard=[];
+let playerCount=4, players=[], current=0, round=1, gameOver=false, phase='roll', pendingRoll=0;
+let piecesPerPlayer = 4; // dynamic pieces per player (1-4), set before game starts
+let shootMode=null; // {gun, pieceIdx}
+let swapMode=null;
+let movePickMode=null; // {handIdx, card} — player is choosing which piece a move card applies to
+
+// ---- Shop / Marketplace ---------------------------------------------------
+const SHOP_ITEMS = [
+  {id:'rookGun', name:'Rook Gun', icon:'♜', price:5,
+    desc:'Shoot horizontally or vertically (rook line). Send a target piece to Start.', gun:'rook'},
+  {id:'bishopGun', name:'Bishop Gun', icon:'♝', price:10,
+    desc:'Shoot diagonally (bishop line). Send a target piece to Start.', gun:'bishop'},
+  {id:'queenGun', name:'Queen Gun', icon:'♛', price:18,
+    desc:'Shoot in any straight line — horizontal, vertical, or diagonal. Send a target piece to Start.', gun:'queen'},
+  {id:'wizard', name:'Wizard', icon:'🧙', price:25,
+    desc:'Freeze an opponent piece for 2 full turns (cannot move).'},
+];
+const SHOP_PRICES = {rookGun:5, bishopGun:10, queenGun:18, wizard:25};
+let shopPurchased = {}; // {itemId: true} — global, one copy each
+let abilityMode = null; // {kind:'gun', gun:'rook'|'bishop'|'queen', from, pieceIdx} or {kind:'wizard', targetPi, targetIdx}
+
+const boardEl=document.getElementById('board'), svgEl=document.getElementById('svgOverlay'), tokensEl=document.getElementById('tokens');
+const diceEl=document.getElementById('dice'), rollBtn=document.getElementById('rollBtn'), turnCard=document.getElementById('turnCard');
+const turnName=document.getElementById('turnName'), turnSub=document.getElementById('turnSub'), turnLabel=document.getElementById('turnLabel');
+const playersList=document.getElementById('playersList'), logEl=document.getElementById('log'), roundInfo=document.getElementById('roundInfo');
+const piecesTray=document.getElementById('piecesTray'), chooseHint=document.getElementById('chooseHint'), rollValBadge=document.getElementById('rollValBadge');
+
+function cellCenter(n){const rowFromBottom=Math.floor((n-1)/10), colInRow=(n-1)%10, rev=rowFromBottom%2===1, col=rev?9-colInRow:colInRow, rowFromTop=9-rowFromBottom; return {x:col*10+5,y:rowFromTop*10+5}}
+function getRC(n){ if(n<1||n>100) return null; const r=Math.floor((n-1)/10), c0=(n-1)%10, rev=r%2===1, c=rev?9-c0:c0; return {r,c}; }
+function canShoot(from,to,gun){
+  if(from===to||from<1||to<1||from>100||to>100) return false;
+  const a=getRC(from), b=getRC(to); if(!a||!b) return false;
+  const sameRow=a.r===b.r, sameCol=a.c===b.c, sameDiag=Math.abs(a.r-b.r)===Math.abs(a.c-b.c);
+  if(gun==='rook') return sameRow||sameCol;
+  if(gun==='bishop') return sameDiag;
+  if(gun==='queen') return sameRow||sameCol||sameDiag;
+  return false;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function buildBoard(){
+  boardEl.innerHTML='';
+  for(let rTop=0;rTop<10;rTop++){const rBottom=9-rTop, rev=rBottom%2===1;
+    for(let c=0;c<10;c++){const colInRow=rev?9-c:c, n=rBottom*10+colInRow+1;
+      const d=document.createElement('div'); d.className='cell'; d.dataset.n=n;
+      const isCard=CARD_CELLS.includes(n), isM=isMoney(n), isH=isHurricane(n), isS=isSwamp(n), isE=isElevator(n);
+      if(n===1) d.classList.add('start'); if(n===100) d.classList.add('finish');
+      if(isCard) d.classList.add('card-cell');
+      if(isM) d.classList.add('money');
+      if(isH) d.classList.add('hurricane');
+      if(isS) d.classList.add('swamp');
+      if(isE) d.classList.add('elevator');
+      if(n===DEATH_TRAP) d.classList.add('death-trap');
+      d.innerHTML=`<span class="cell-num">${n}</span>`+(n===DEATH_TRAP?`<span class="cell-icon">💀</span>`:'')+(isCard?`<span class="cell-icon">🃏</span>`:'')+(isM&&!isCard?`<span class="cell-icon">🪙</span>`:'')+(isH?`<span class="cell-icon">🌀</span>`:'')+(isS?`<span class="cell-icon">🐊</span>`:'')+(isE?`<span class="cell-icon">🛗${elevatorArrow(n)}</span>`:'')+(n===100?`<span class="cell-icon">🏁</span>`:'')+(n===1?`<span class="cell-icon">▶</span>`:'');
+      boardEl.appendChild(d);
+    }}
+  drawConnections();
+}
+function drawConnections(){
+  svgEl.innerHTML='';
+}
+
+function buildPiecesForPlayer(name,color,count=4){
+  count = Math.max(1, Math.min(4, Math.round(count)||1)); // clamp 1..4 (any out-of-range forced into range)
+  return {name,color, pieces: Array.from({length:count},(_,k)=>({id:k, pos:0, level:1, moves:0, hurricane:false, swamp:0, cooldown:0, frozen:0})), coins:3, hand:[], guns:{rook:0,bishop:0,queen:0}, abilities:[], totalMoves:0 };
+}
+function drawFromDeck(){ if(deck.length===0){
+  const reshuffle=discard.filter(c=> c.kind!=='gun' && c.kind!=='swap');
+  const burned=discard.filter(c=> c.kind==='gun' || c.kind==='swap');
+  discard=[...burned];
+  if(reshuffle.length===0){ deck=buildDeck(); discard=[]; addLog('Deck reshuffled!','roll','🔀'); }
+  else { deck=[...reshuffle]; for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; } addLog('Deck reshuffled!','roll','🔀'); }
+  if(deck.length===0) deck=buildDeck();
+} return deck.pop(); }
+function updateDeckUI(){
+  const dc=document.getElementById('deckCount'), dd=document.getElementById('deckDiscard'), dm=document.getElementById('deckMini');
+  if(dc) dc.textContent=deck.length; if(dd) dd.textContent=discard.length;
+  if(dm) dm.textContent=deck.length?`Deck ${deck.length} · Discard ${discard.length}`:'';
+}
+
+function movableIndices(player, roll){
+  const idx=[]; player.pieces.forEach((pc,i)=>{ if(pc.swamp>0) return; if(pc.cooldown>0) return; if(pc.frozen>0) return; if(pc.pos>=100) return; if(pc.hurricane){ if(pc.pos - roll < 0) return; idx.push(i); } else { if(pc.pos+roll<=100) idx.push(i); } });
+  return idx;
+}
+
+function renderTokens(){
+  tokensEl.innerHTML='';
+  const posGroups={};
+  players.forEach((pl,pi)=>pl.pieces.forEach(pc=>{
+    if(pc.pos===0) return;
+    const key=pc.pos; (posGroups[key]=posGroups[key]||[]).push({pi,pc});
+  }));
+  players.forEach((pl,pi)=>pl.pieces.forEach((pc,idx)=>{
+    if(pc.pos===0) return;
+    const c=cellCenter(pc.pos);
+    const group=posGroups[pc.pos]||[];
+    const order=group.findIndex(g=>g.pi===pi && g.pc===pc);
+    const count=group.length;
+    let ox=0, oy=0;
+    if(count>1){
+      const cols=Math.ceil(Math.sqrt(count));
+      const col=order%cols, row=Math.floor(order/cols);
+      const step=3.2;
+      ox=(col - (cols-1)/2)*step;
+      oy=(row - (Math.ceil(count/cols)-1)/2)*step;
+    }
+    const el=document.createElement('div');
+    const isCurrentPlayer = pi===current && !gameOver;
+    const swamped = pc.swamp>0;
+    const hurricane = !!pc.hurricane;
+    const inCooldown = pc.cooldown>0;
+    const isFrozen = pc.frozen>0;
+    let isChoosable = isCurrentPlayer && phase==='choose' && !swamped && !inCooldown && !isFrozen && pc.pos<100;
+    if(isChoosable){
+      if(hurricane){ if(pc.pos - pendingRoll < 0) isChoosable=false; }
+      else { if(pc.pos + pendingRoll > 100) isChoosable=false; }
+    }
+    // movePickMode: current player's pieces on board become selectable targets for a move card
+    let isMovePickTarget = movePickMode && isCurrentPlayer && pc.pos>0 && pc.pos<100 && !swamped && !inCooldown && !isFrozen;
+    let isShootTarget=false, isSwapTarget=false;
+    let isAbilityTarget=false;
+    if(abilityMode && pi!==current && pc.pos>0 && !isFrozen){
+      if(abilityMode.kind==='wizard'){
+        isAbilityTarget=true; // wizard can freeze any opponent piece on board
+      } else if(abilityMode.kind==='gun' && abilityMode.from>0){
+        if(canShoot(abilityMode.from, pc.pos, abilityMode.gun)) isAbilityTarget=true;
+      }
+    }
+    if(shootMode && pi!==shootMode.owner && pc.pos>0){
+      const from=players[shootMode.owner]?.pieces[shootMode.pieceIdx]?.pos||0;
+      if(from>0 && canShoot(from,pc.pos,shootMode.gun)) isShootTarget=true;
+    }
+    if(swapMode && pc.pos>0){ isSwapTarget=true; if(pi===swapMode.owner && idx===swapMode.pieceIdx) isSwapTarget=false; }
+    el.className=`token l${pc.level}` + (isChoosable?' selectable':'') + (isShootTarget||isSwapTarget?' target-token':'') + (isAbilityTarget?' ability-target':'') + (isMovePickTarget?' move-pick-target':'');
+    el.style.left=`calc(${c.x}% + ${ox}%)`;
+    el.style.top=`calc(${c.y}% + ${oy}%)`;
+    el.style.transform='translate(-50%,-50%)';
+    el.style.background = COLORS[pi];
+    el.style.border = `2.5px solid ${COLORS[pi]}`;
+    if(isFrozen) { el.style.opacity='0.4'; el.style.filter='grayscale(0.8) brightness(0.7)'; }
+    if(pc.level>=3) el.style.boxShadow=`0 0 12px ${COLORS[pi]}, 0 0 24px ${COLORS[pi]}55`;
+    const lvlBadge = pc.level>=2 ? `<span style="position:absolute;top:-6px;right:-6px;background:${COLORS[pi]};color:white;font-size:7px;font-weight:800;padding:1px 3px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.5);box-shadow:0 1px 4px rgba(0,0,0,0.4)">${pc.level===4?'★'+pc.level:'×'+pc.level}</span>`:'';
+    const statusBadge = swamped ? `<span class="status-badge swamp">🐊</span>` : hurricane ? `<span class="status-badge hurr">🌀</span>` : isFrozen ? `<span class="status-badge frozen">🧊${pc.frozen}</span>` : inCooldown ? `<span class="status-badge cooldown">⏳${pc.cooldown}</span>` : '';
+    el.innerHTML=`${pi+1}${LEVEL_ICON[pc.level] ? `<span style="font-size:8px;margin-left:1px">${LEVEL_ICON[pc.level]}</span>`:''}`+lvlBadge+statusBadge;
+    el.title=`${pl.name} — Piece ${idx+1} · Lv${pc.level} ${LEVEL_NAME[pc.level]} · on ${pc.pos}${hurricane?' · 🌀 HURRICANE next back':''}${swamped?' · 🐊 SWAMP locked':''}${inCooldown?' · ⏳ Cooldown: '+pc.cooldown+' turns':''}${isFrozen?' · ❄️ Frozen: '+pc.frozen+' turns':''}` + (isShootTarget?` — SHOOT TARGET (${shootMode.gun})`:'') + (isSwapTarget?' — SWAP TARGET':'');
+    if(statusBadge){ /* already appended */ }
+    if(isChoosable) el.addEventListener('click',()=> choosePiece(idx));
+    else if(isMovePickTarget) el.addEventListener('click',()=> pickPieceForMove(idx));
+    else if(isShootTarget) el.addEventListener('click',()=> doShoot(pi,idx));
+    else if(isSwapTarget) el.addEventListener('click',()=> doSwap(pi,idx));
+    else if(isAbilityTarget) el.addEventListener('click',()=> castAbility(pi,idx));
+    tokensEl.appendChild(el);
+  }));
+}
+
+function renderAll(){
+  const cur=players[current];
+  if(cur){ turnCard.style.setProperty('--cur-color', COLORS[current]); rollBtn.style.background=COLORS[current]; turnName.textContent=cur.name; turnName.style.color=COLORS[current]; }
+  if(gameOver){ turnLabel.textContent='Game over'; turnSub.textContent='🎉 Finished!'; chooseHint.classList.remove('show'); }
+  else if(abilityMode && abilityMode.kind==='wizard'){ turnLabel.textContent=`${players[current].name} — WIZARD!`; turnSub.textContent=`🧙 Tap an opponent piece to freeze for 2 turns`; chooseHint.classList.remove('show'); }
+  else if(abilityMode && abilityMode.kind==='gun'){ turnLabel.textContent=`${players[current].name} — SHOOT!`; turnSub.textContent=`🔫 ${abilityMode.gun.toUpperCase()} from ${abilityMode.from} — tap a highlighted opponent piece`; chooseHint.classList.remove('show'); }
+  else if(movePickMode){ turnLabel.textContent=`${players[current].name} — MOVE CARD!`; turnSub.textContent=`${movePickMode.card.icon} ${movePickMode.card.name} — tap one of your pieces to move it`; chooseHint.classList.remove('show'); }
+  else if(shootMode){ turnLabel.textContent=`${players[shootMode.owner].name} — SHOOT!`; turnSub.textContent=`${shootMode.gun.toUpperCase()} from ${shootMode.from} — tap a highlighted opponent piece`; chooseHint.classList.remove('show'); }
+  else if(swapMode){ turnLabel.textContent=`${players[swapMode.owner].name} — SWAP!`; turnSub.textContent=`Pick your piece then an opponent piece to swap`; chooseHint.classList.remove('show'); }
+  else if(phase==='choose'){ turnLabel.textContent=`Player ${current+1} — choose a piece`; turnSub.textContent=`Rolled ${pendingRoll} — tap a highlighted piece or slot below`; chooseHint.classList.add('show'); rollValBadge.textContent=`Roll: ${pendingRoll}`; }
+  else { turnLabel.textContent=`Player ${current+1}'s turn`; const atStart = cur && cur.pieces.every(p=>p.pos===0); turnSub.textContent= atStart ? 'All pieces at Start — roll to begin!' : `Pieces on board — roll to move`; chooseHint.classList.remove('show'); }
+
+  // coin + hand header
+  if(cur){
+    const cb=document.getElementById('coinBadge'), hc=document.getElementById('handCount');
+    if(cb) cb.textContent=`🪙 ${cur.coins}`;
+    if(hc) hc.textContent=`Hand: ${cur.hand.length} · Guns: ${cur.guns.rook?'♜':''}${cur.guns.bishop?'♝':''}${cur.guns.queen?'♛':''}`.trim() || 'Hand: 0';
+  }
+  updateDeckUI();
+  const sh=document.getElementById('shootHint');
+  if(sh){
+    if(abilityMode && abilityMode.kind==='wizard') { sh.classList.add('show'); sh.innerHTML=`🧙 <b>WIZARD</b> — tap an opponent piece to <b>freeze for 2 turns</b>. <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="cancelAbility()">Cancel</button>`; }
+    else if(abilityMode && abilityMode.kind==='gun') { sh.classList.add('show'); sh.innerHTML=`🔫 <b>${abilityMode.gun.toUpperCase()} Gun</b> from <b>${abilityMode.from}</b> — tap a highlighted opponent piece to <b>DESTROY</b> it. <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="cancelAbility()">Cancel</button>`; }
+    else if(movePickMode) { sh.classList.add('show'); sh.innerHTML=`${movePickMode.card.icon} <b>${esc(movePickMode.card.name)}</b> — tap one of <b>your pieces</b> to apply it. <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="cancelMovePick()">Cancel</button>`; }
+    else if(shootMode) { sh.classList.add('show'); sh.innerHTML=`🔫 <b>${shootMode.gun.toUpperCase()}</b> from <b>${shootMode.from}</b> — tap a red-dashed opponent piece to <b>send it to Start</b>. <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="cancelShoot()">Cancel</button>`; }
+    else if(swapMode && !swapMode.pickedOwn) { sh.classList.add('show'); sh.innerHTML=`🔄 <b>SWAP</b> — tap one of <b>your</b> pieces first. <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="cancelSwap()">Cancel</button>`; }
+    else if(swapMode && swapMode.pickedOwn) { sh.classList.add('show'); sh.innerHTML=`🔄 Your piece on <b>${swapMode.pickedPos}</b> — now tap an <b>opponent</b> piece to swap. <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="cancelSwap()">Cancel</button>`; }
+    else { sh.classList.remove('show'); sh.innerHTML=''; }
+  }
+
+  // pieces tray for current player
+  piecesTray.innerHTML='';
+  if(cur && !gameOver){
+    // in shoot/swap picking own piece
+    const pickingOwn = swapMode && swapMode.owner===current && !swapMode.pickedOwn;
+    cur.pieces.forEach((pc,idx)=>{
+      const slot=document.createElement('div');
+      let selectable=false;
+      if(pickingOwn && pc.pos>0) selectable=true;
+      else if(!shootMode && !swapMode && phase==='choose' && pc.pos<100 && pc.swamp===0 && pc.cooldown===0 && !pc.frozen){
+        if(pc.hurricane) selectable = pc.pos - pendingRoll >=0;
+        else selectable = pc.pos + pendingRoll <=100;
+      }
+      else if(movePickMode && pc.pos>0 && pc.pos<100 && pc.swamp===0 && pc.cooldown===0 && !pc.frozen) selectable=true;
+      else if(shootMode && shootMode.owner===current) selectable=false;
+      const isSwamped = pc.swamp>0;
+      const isHurr = !!pc.hurricane;
+      const isCooldown = pc.cooldown>0;
+      slot.className='piece-slot' + (selectable?' selectable':'') + (pc.pos===100?' won':'') + (isSwamped?' locked swamp':'') + (isHurr&&!isSwamped?' hurricane':'') + (isCooldown?' cooldown':'');
+      slot.style.setProperty('--cur-color', COLORS[current]);
+      if(selectable){
+        if(pickingOwn) slot.addEventListener('click',()=> pickOwnForSwap(idx));
+        else if(movePickMode) slot.addEventListener('click',()=> pickPieceForMove(idx));
+        else slot.addEventListener('click',()=> choosePiece(idx));
+      }
+      let canMoveHint='';
+      if(pickingOwn) canMoveHint='pick to swap';
+      else if(pc.swamp>0) canMoveHint='🐊 swamp locked';
+      else if(isCooldown) canMoveHint = `⏳ cooldown ${pc.cooldown}`;
+      else if(pc.hurricane) canMoveHint = phase==='choose' ? (pc.pos - pendingRoll >=0 ? `🌀 ← ${pc.pos - pendingRoll}` : '✕ edge') : '🌀 next back';
+      else if(pc.frozen>0) canMoveHint = `🧊 frozen: ${pc.frozen}T`;
+      else canMoveHint = phase==='choose' ? (pc.pos+pendingRoll<=100&&pc.pos<100 ? (pc.pos+pendingRoll===DEATH_TRAP?'→ 💀 13':`→ ${pc.pos+pendingRoll}`) : '✕ overshoot') : `on ${pc.pos===0?'Start':pc.pos}`;
+      slot.innerHTML=`
+        <div class="lvl-badge">Lv${pc.level}${isCooldown?' <span style="font-size:9px;background:rgba(255,255,255,0.2);color:#00d9a5;padding:1px 4px;border-radius:10px">⏳'+pc.cooldown+'</span>':''}</div>
+        <div class="ps-icon l${pc.level}" style="background:${COLORS[current]};border:2px solid ${COLORS[current]}">${current+1}${pc.level>1?`<span style="font-size:7px;margin-left:1px">${LEVEL_ICON[pc.level]}</span>`:''}</div>
+        <div class="ps-pos">${pc.pos===0?'Start':pc.pos===100?'🏁 100':pc.pos} <span style="font-size:10px;color:var(--muted)">${canMoveHint}</span>${pc.frozen>0?' <span style="font-size:10px">🧊</span>':''}</div>
+        <div class="ps-lvl">${LEVEL_NAME[pc.level]} ${pc.level>1?'×'+pc.level:''}</div>
+      `;
+      piecesTray.appendChild(slot);
+    });
+    if(cur.pieces.length<4 && cur.pieces.length < piecesPerPlayer){
+      const info=document.createElement('div'); info.style.cssText='grid-column:1/-1;text-align:center;font-size:11px;color:var(--muted);padding:4px';
+      info.textContent=`${piecesPerPlayer - cur.pieces.length} piece(s) merged into greater forms`;
+      piecesTray.appendChild(info);
+    }
+    // ability mode cancel button
+    if(abilityMode){
+      const cancelBtn=document.createElement('button');
+      cancelBtn.textContent='✕ Cancel Ability';
+      cancelBtn.className='btn btn-ghost';
+      cancelBtn.style.cssText='padding:6px 12px;font-size:12px;margin-bottom:8px;width:100%';
+      cancelBtn.addEventListener('click', cancelAbility);
+      piecesTray.appendChild(cancelBtn);
+    }
+    // hand area
+    const handArea=document.getElementById('handArea');
+    if(handArea){
+      handArea.innerHTML='';
+      if(cur.hand.length>0){
+        const hTitle=document.createElement('div'); hTitle.style.cssText='font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px'; hTitle.textContent='Your cards — tap to play';
+        handArea.appendChild(hTitle);
+        const handDiv=document.createElement('div'); handDiv.className='hand';
+        cur.hand.forEach((card,ci)=>{
+          const b=document.createElement('button');
+          b.className='hand-card'+(card.kind==='gun'?' gun':'')+(card.kind==='swap'?' special':'');
+          b.innerHTML=`<span>${card.icon}</span> ${card.name}`;
+          b.title=card.desc;
+          b.addEventListener('click',()=> playCard(ci));
+          handDiv.appendChild(b);
+        });
+        handArea.appendChild(handDiv);
+      }
+      // gun buttons if have guns but no hand card
+      const guns=cur.guns;
+      const hasGun=guns.rook||guns.bishop||guns.queen;
+      if(hasGun && !shootMode && !swapMode && phase==='roll'){
+        const gWrap=document.createElement('div'); gWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';
+        if(guns.rook) { const b=document.createElement('button'); b.className='hand-card gun'; b.textContent='♜ Shoot Rook'; b.addEventListener('click',()=> enterShootMode('rook')); gWrap.appendChild(b); }
+        if(guns.bishop) { const b=document.createElement('button'); b.className='hand-card gun'; b.textContent='♝ Shoot Bishop'; b.addEventListener('click',()=> enterShootMode('bishop')); gWrap.appendChild(b); }
+        if(guns.queen) { const b=document.createElement('button'); b.className='hand-card gun'; b.textContent='♛ Shoot Queen'; b.addEventListener('click',()=> enterShootMode('queen')); gWrap.appendChild(b); }
+        handArea.appendChild(gWrap);
+      }
+    }
+  } else {
+    const ha=document.getElementById('handArea'); if(ha) ha.innerHTML='';
+  }
+
+  // players list
+  playersList.innerHTML='';
+  players.forEach((pl,pi)=>{
+    const row=document.createElement('div'); row.className='player-row'+(pi===current && !gameOver?' active':'') + (pl.pieces.some(p=>p.pos===100)?' winner':'');
+    row.style.setProperty('--row-bg', COLOR_BG[pi]); row.style.setProperty('--row-color', COLORS[pi]);
+    const bestPos=Math.max(...pl.pieces.map(p=>p.pos));
+    const piecesHtml=pl.pieces.map((pc,i)=>{ const bgTint = pc.level>=3 ? `background:${COLORS[pi]}18;border-color:${COLORS[pi]}55` : ''; return `<span class="mini l${pc.level}" style="border-left:2.5px solid ${COLORS[pi]};${bgTint}">${pc.pos===0?'S':pc.pos}${pc.level>1?' <b style="color:'+COLORS[pi]+'">Lv'+pc.level+'</b>':''}</span>`; }).join('') + (pl.pieces.length<piecesPerPlayer?` <span class="mini" style="background:rgba(255,215,0,0.12);border-color:rgba(255,215,0,0.3)">⭐ ${piecesPerPlayer-pl.pieces.length} merged</span>`:'');
+    const hasWon=pl.pieces.some(p=>p.pos===100);
+    const gunStr=(pl.guns.rook?'♜':'')+(pl.guns.bishop?'♝':'')+(pl.guns.queen?'♛':'');
+    const abilStr=(pl.abilities||[]).map(a=>{ const m={'rookGun':'♜','bishopGun':'♝','queenGun':'♛','wizard':'🧙'}; return m[a]||'?'; }).join(' ') || '';
+    row.innerHTML=`
+      <div class="p-avatar" style="background:${COLORS[pi]}">${pl.name.charAt(0).toUpperCase()}</div>
+      <div class="p-info"><div class="p-name">${esc(pl.name)} ${hasWon?'🏆':''}</div>
+      <div class="p-pos">Best: ${bestPos} · 🪙${pl.coins} · ${pl.hand.length} cards ${gunStr?'· '+gunStr:''} ${abilStr?'· '+abilStr:''}· ${pl.pieces.length} pcs</div>
+      <div class="mini-pieces">${piecesHtml}</div></div>
+      <div class="p-badge ${pi===current && !gameOver?'turn':''}" style="${pi===current && !gameOver?`background:${COLORS[pi]};color:white`:''}">${hasWon?'WINNER':pi===current && !gameOver?'▶ TURN':`P${pi+1}`}</div>`;
+    playersList.appendChild(row);
+  });
+  roundInfo.textContent=`Round ${round} · ${players.length} players · 4 pcs each`;
+  const canRoll = !gameOver && phase==='roll' && !shootMode && !swapMode && !abilityMode;
+  rollBtn.disabled = !canRoll;
+  renderTokens();
+  renderAbilities();
+  if(Net.isHost) Net.scheduleBroadcast();
+}
+
+function addLog(msg,type='roll',icon=''){
+  const e=document.createElement('div'); e.className='log-entry '+type; e.innerHTML=`<span>${icon}</span><span>${msg}</span>`; logEl.prepend(e); while(logEl.children.length>40) logEl.removeChild(logEl.lastChild);
+}
+function diceDots(n){
+  const pat={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+  let h='<div class="dice-face">'; for(let i=0;i<9;i++) h+= pat[n].includes(i)?'<div class="dot-dice"></div>':'<div></div>'; h+='</div>'; return h;
+}
+function setDice(n, animate=false){ if(animate){ diceEl.classList.remove('rolling'); void diceEl.offsetWidth; diceEl.classList.add('rolling'); } setTimeout(()=>{ diceEl.innerHTML=diceDots(n); }, animate?180:0); }
+function highlightCell(n){ document.querySelectorAll('.cell.highlight').forEach(c=>c.classList.remove('highlight')); const el=document.querySelector(`.cell[data-n="${n}"]`); if(el){ el.classList.add('highlight'); setTimeout(()=>el.classList.remove('highlight'),900); }}
+
+async function doRoll(){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn — guest can't roll for others
+    Net.intent('roll'); return;
+  }
+  if(gameOver || phase!=='roll' || shootMode || swapMode || abilityMode) return;
+  phase='animating'; rollBtn.disabled=true;
+  const roll=1+Math.floor(Math.random()*6); pendingRoll=roll; // decide the real result up front
+  const iv=setInterval(()=>{ diceEl.innerHTML=diceDots(1+Math.floor(Math.random()*6)); },70); // shuffle faces for show
+  diceEl.classList.add('rolling');
+  await new Promise(r=>setTimeout(r,560));
+  clearInterval(iv); // stop the shuffle BEFORE drawing the real face
+  diceEl.classList.remove('rolling');
+  diceEl.innerHTML=diceDots(roll); // final face always matches the rolled number
+  const pl=players[current]; pl.totalMoves++;
+  const movables=movableIndices(pl, roll);
+  if(movables.length===0){
+    addLog(`<b>${esc(pl.name)}</b> rolled <b>${roll}</b> — no piece can move (all would overshoot 100).`, 'roll','🎲');
+    await new Promise(r=>setTimeout(r,700));
+    nextTurn(roll===6);
+    return;
+  }
+  addLog(`<b>${esc(pl.name)}</b> rolled <b>${roll}</b> — choose a piece to move.`, 'roll','🎲');
+  phase='choose'; renderAll();
+}
+
+let pendingCard=null, pendingCardPieceIdx=null;
+let cardDrawn=false; // becomes true after the player chooses to draw and the card is flipped
+function openCardChoice(pieceIdx){
+  pendingCard=null; pendingCardPieceIdx=pieceIdx; cardDrawn=false;
+  const flip=document.getElementById('cardFlip');
+  flip.classList.remove('flipped','draw-anim');
+  // reset to face-down (remove innerHTML so the front is empty until drawn)
+  document.getElementById('cardFront').innerHTML='';
+  document.getElementById('cardOverlayTitle').textContent='🃏 Card cell '+players[current].pieces[pieceIdx].pos;
+  document.getElementById('cardOverlaySub').textContent='Take a coin, or draw a mystery card?';
+  document.getElementById('cardChoiceActions').style.display='flex';
+  document.getElementById('cardRevealActions').style.display='none';
+  document.getElementById('cardOverlay').style.display='grid';
+  if(Net.isHost) Net.broadcastNow();
+}
+function showCardFront(card){
+  const front=document.getElementById('cardFront');
+  front.innerHTML=`<div class="cf-icon">${card.icon}</div><div class="cf-name">${esc(card.name)}</div><div class="cf-desc">${esc(card.desc)}</div>`;
+  const flip=document.getElementById('cardFlip');
+  flip.classList.remove('draw-anim'); void flip.offsetWidth; flip.classList.add('draw-anim');
+  flip.classList.add('flipped');
+}
+function closeCardOverlay(){ document.getElementById('cardOverlay').style.display='none'; }
+// player chose to DRAW -> reveal face-down, then flip to show the card
+async function doDrawCard(){
+  if(cardDrawn) return;
+  const card=drawFromDeck();
+  pendingCard=card; cardDrawn=true;
+  addLog(`<b>${esc(players[current].name)}</b> drew from 🃏 cell — flipping card...`, 'merge','🃏');
+  document.getElementById('cardOverlayTitle').textContent='🎴 Drawing...';
+  document.getElementById('cardOverlaySub').textContent='';
+  document.getElementById('cardChoiceActions').style.display='none';
+  await new Promise(r=>setTimeout(r,250)); // brief pause on the face-down back
+  showCardFront(card);
+  await new Promise(r=>setTimeout(r,650)); // let the flip animation finish
+  document.getElementById('cardOverlayTitle').textContent=card.name;
+  document.getElementById('cardOverlaySub').textContent = (card.kind==='empty') ? 'Nothing happens. Kept in your hand — discard it on a future turn.' : 'You drew this card — it goes to your hand. Play it on a future turn before rolling.';
+  document.getElementById('cardConfirm').textContent = (card.kind==='empty') ? 'Keep Empty Card' : 'Take Card';
+  document.getElementById('cardRevealActions').style.display='flex';
+  if(Net.isHost) Net.broadcastNow();
+}
+
+async function resolveCard(card, pieceIdx){
+  const pl=players[current];
+  // ALL drawn cards are kept in hand — nothing auto-applies at draw time.
+  // Everything is played from hand on a later turn (see playCard()).
+  pl.hand.push(card);
+  const kept = (card.kind==='gun') ? ' — kept in hand, play it on your turn before rolling!' : ' — kept in hand, play it on a future turn!';
+  addLog(`<b>${esc(pl.name)}</b> drew <b>${card.icon} ${esc(card.name)}</b>${kept}`, card.kind==='coin'&&card.coins<0?'snake':'roll', card.icon);
+  return false;
+}
+
+function playCard(handIdx){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn
+    Net.intent('playCard', {ci:handIdx}); return;
+  }
+  if(gameOver || shootMode || swapMode) return;
+  if(phase!=='roll'){ addLog('Play cards before rolling!', 'roll','⛔'); return; }
+  const pl=players[current]; const card=pl.hand[handIdx]; if(!card) return;
+  if(card.kind==='empty'){ pl.hand.splice(handIdx,1); discard.push(card); addLog(`<b>${esc(pl.name)}</b> discarded empty card.`, 'roll','⬜'); renderAll(); return; }
+  if(card.kind==='swap'){ pl.hand.splice(handIdx,1); // enter swap
+    enterSwapMode(handIdx, card);
+    return;
+  }
+  if(card.kind==='coin'){
+    pl.hand.splice(handIdx,1);
+    const before=pl.coins; pl.coins=Math.max(0, pl.coins+card.coins);
+    const delta=card.coins>0?`+${card.coins}`:`${card.coins}`;
+    addLog(`<b>${esc(pl.name)}</b> played ${card.icon} <b>${esc(card.name)}</b> — <b>${delta} coin(s)</b> → 🪙 ${before} → ${pl.coins}`, card.coins>0?'ladder':'snake', card.icon);
+    discard.push(card);
+    renderAll();
+    return;
+  }
+  if(card.kind==='gun'){
+    pl.hand.splice(handIdx,1);
+    pl.guns[card.gun]=(pl.guns[card.gun]||0)+1;
+    addLog(`<b>${esc(pl.name)}</b> loaded <b>${card.icon} ${esc(card.name)}</b> — gun charge ready! Shoot it anytime on your turn before rolling.`, 'merge','🔫');
+    discard.push(card);
+    renderAll();
+    return;
+  }
+  if(card.kind==='move'){
+    // played on the CURRENT player's own turn: pick which piece to apply it to
+    movePickMode={handIdx, card};
+    renderAll();
+    addLog(`<b>${esc(pl.name)}</b> played ${card.icon} <b>${esc(card.name)}</b> — tap one of your pieces to move it!`, 'roll', card.icon);
+    return;
+  }
+  addLog('Unknown card type — cannot play.', 'roll','⛔');
+}
+function pickPieceForMove(idx){
+  if(Net.isGuest()){
+    Net.intent('movePick', {idx}); return;
+  }
+  if(!movePickMode) return;
+  const pl=players[current], card=movePickMode.card, handIdx=movePickMode.handIdx;
+  const pc=pl.pieces[idx]; if(!pc) return;
+  // only pieces on the board (not Start/100) and not locked can move
+  if(pc.pos<=0 || pc.pos>=100 || pc.swamp>0 || pc.cooldown>0 || pc.frozen>0){ addLog(`<b>${esc(pl.name)}</b> that piece can't move (status lock).`, 'roll','⛔'); return; }
+  // reuse the resolution logic: play the move card on pc at handIdx
+  const hl = pl.hand[handIdx];
+  if(!hl || hl.kind!=='move'){ movePickMode=null; renderAll(); return; }
+  movePickMode=null;
+  pl.hand.splice(handIdx,1);
+  let dest=pc.pos+card.delta;
+  dest=Math.max(0, Math.min(100, dest));
+  if(dest===pc.pos){ addLog(`<b>${esc(pl.name)}</b> played ${card.icon} ${esc(card.name)} on piece ${idx+1} — no move (edge).`, 'roll', card.icon); discard.push(card); renderAll(); return; }
+  const from=pc.pos; pc.pos=dest;
+  pc.cooldown = 2; // 1-turn cooldown after movement (matches normal move)
+  // trigger snake/ladder after movement card if landing on one
+  let extra='';
+  if(dest===DEATH_TRAP){ pc.pos=0; extra=` → 💀 Death Trap 13 — piece destroyed!`; }
+  else if(isElevator(dest)){ let eLog=` → 🛗 elevator ${dest}`; pc.pos=elevatorDest(dest); eLog+=`→${pc.pos}`; while(isElevator(pc.pos)){ const nx=elevatorDest(pc.pos); eLog+=`, chained ${pc.pos}→${nx}`; pc.pos=nx; } extra=eLog; }
+  addLog(`<b>${esc(pl.name)}</b> played ${card.icon} <b>${esc(card.name)}</b>: piece ${idx+1} ${from} → ${pc.pos}${extra}`, 'roll', card.icon);
+  discard.push(card);
+  renderAll();
+  // win check after movement card
+  if(pc.pos===100){
+    gameOver=true; renderAll();
+    document.getElementById('winTitle').textContent=`${pl.name} wins! 🏆`;
+    document.getElementById('winSub').textContent=`Lv${pc.level} ${LEVEL_NAME[pc.level]} Piece ${idx+1} via card reached 100!`;
+    document.getElementById('winOverlay').style.display='grid';
+    addLog(`<b>${esc(pl.name)}</b> won via movement card!`, 'win','🏆'); launchConfetti();
+    return;
+  }
+  // stacking/level-up choice — card play doesn't end the turn; player still rolls after
+  const openedMerge = checkStackChoice(pl, pc.pos, idx, ()=>{ renderAll(); });
+  if(!openedMerge){ renderAll(); }
+}
+function enterSwapMode(fromHandIdx, card){
+  const pl=players[current];
+  swapMode={owner:current, card, handIdx:fromHandIdx, pickedOwn:false, pickedOwnIdx:null, pickedPos:null};
+  renderAll();
+}
+function pickOwnForSwap(idx){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn
+    Net.intent('swapPickOwn', {idx}); return;
+  }
+  if(!swapMode || swapMode.owner!==current || swapMode.pickedOwn) return;
+  const pc=players[current].pieces[idx]; if(!pc || pc.pos===0 || pc.pos===100) return;
+  swapMode.pickedOwn=true; swapMode.pickedOwnIdx=idx; swapMode.pickedPos=pc.pos; renderAll();
+}
+function doSwap(targetPi, targetIdx){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn
+    Net.intent('swapDo', {pi:targetPi, idx:targetIdx}); return;
+  }
+  if(!swapMode) return;
+  if(!swapMode.pickedOwn){ // still picking own — shouldn't happen via token path here
+    return;
+  }
+  const owner=current, opp=targetPi;
+  if(opp===owner) return;
+  const a=players[owner].pieces[swapMode.pickedOwnIdx], b=players[opp].pieces[targetIdx];
+  if(!a||!b||a.pos===0||b.pos===0) return;
+  const pa=a.pos, pb=b.pos; a.pos=pb; b.pos=pa;
+  if(a.pos===DEATH_TRAP) a.pos=0;
+  if(b.pos===DEATH_TRAP) b.pos=0;
+  if(isElevator(a.pos)) while(isElevator(a.pos)){ a.pos=elevatorDest(a.pos); }
+  if(isElevator(b.pos)) while(isElevator(b.pos)){ b.pos=elevatorDest(b.pos); }
+  addLog(`<b>${esc(players[owner].name)}</b> 🔄 SWAP! Piece on ${pa} ↔ ${players[opp].name} piece on ${pb}${a.pos===0||b.pos===0?' — 💀 Death Trap destroyed!':''}`, 'merge','🔄');
+  discard.push(swapMode.card);
+  swapMode=null; renderAll(); highlightCell(pa); setTimeout(()=>highlightCell(pb),300);
+}
+function cancelSwap(){ if(swapMode){ const pl=players[swapMode.owner]; if(swapMode.card) pl.hand.splice(swapMode.handIdx,0,swapMode.card); } swapMode=null; renderAll(); }
+function cancelMovePick(){ movePickMode=null; renderAll(); }
+function enterShootMode(gun){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn
+    Net.intent('enterShoot', {gun}); return; // host will broadcast shootMode back
+  }
+  if(gameOver||phase!=='choose'&&phase!=='roll') { if(phase!=='roll') return; }
+  const pl=players[current]; if(!pl.guns[gun]) return;
+  // pick which of your pieces to shoot from — use best positioned piece
+  let bestIdx=0, bestPos=-1; pl.pieces.forEach((pc,i)=>{ if(pc.pos>bestPos && pc.pos>0 && pc.pos<100){bestPos=pc.pos; bestIdx=i;}});
+  if(bestPos<0){ addLog('Need a piece on board to shoot from!', 'roll','⛔'); return; }
+  shootMode={owner:current, gun, pieceIdx:bestIdx, from:pl.pieces[bestIdx].pos};
+  renderAll();
+  addLog(`<b>${esc(pl.name)}</b> aiming <b>${gun.toUpperCase()}</b> from ${shootMode.from} — tap a highlighted opponent piece!`, 'roll','🔫');
+}
+function doShoot(targetPi, targetIdx){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn
+    Net.intent('shootPick', {pi:targetPi, idx:targetIdx}); return;
+  }
+  if(!shootMode) return;
+  const shooter=players[shootMode.owner], target=players[targetPi].pieces[targetIdx];
+  if(!target||target.pos===0) return;
+  if(!canShoot(shootMode.from, target.pos, shootMode.gun)){ addLog('Not in line for that shooter!', 'roll','⛔'); return; }
+  const fromPos=shootMode.from, hitPos=target.pos;
+  target.pos=0; // send to start
+  shooter.guns[shootMode.gun]--;
+  addLog(`<b>${esc(shooter.name)}</b> 🔫 <b>${shootMode.gun.toUpperCase()}</b> from ${fromPos} HIT ${esc(players[targetPi].name)} on ${hitPos} → sent to Start!`, 'snake','💥');
+  shootMode=null; renderAll();
+}
+function cancelShoot(){ shootMode=null; renderAll(); }
+
+// ---- Shop / Marketplace ---------------------------------------------------
+function openShop(){
+  if(gameOver) return;
+  const panel=document.getElementById('shopOverlay');
+  if(!panel) return;
+  panel.style.display='grid';
+  renderShop();
+  if(Net.isHost) Net.broadcastNow();
+}
+function closeShop(){
+  document.getElementById('shopOverlay').style.display='none';
+  renderAll();
+}
+function renderShop(){
+  const grid=document.getElementById('shopGrid');
+  if(!grid) return;
+  const cur=players[current];
+  grid.innerHTML='';
+  if(!cur){ grid.innerHTML='<p style="color:var(--muted)">No player data</p>'; return; }
+  document.getElementById('shopCoins').textContent=cur.coins;
+  SHOP_ITEMS.forEach(item=>{
+    const bought = shopPurchased[item.id];
+    const canAfford = cur.coins >= item.price;
+    const row=document.createElement('div');
+    row.className='shop-item';
+    row.innerHTML=
+      `<div class="shop-item-icon">${item.icon}</div>
+       <div class="shop-item-info">
+         <div class="shop-item-name">${item.name}</div>
+         <div class="shop-item-desc">${item.desc}</div>
+         <div class="shop-item-price">🪙 ${item.price}</div>
+       </div>
+       <button class="btn ${canAfford?'btn-primary':'btn-ghost'}" style="padding:6px 12px;font-size:13px" onclick="buyItem('${item.id}')" ${bought?'disabled':''} ${!canAfford&&!bought?'disabled':''}>
+         ${bought?'✅ Sold':(canAfford?'BUY':'💰 Can\'t Afford')}
+       </button>`;
+    grid.appendChild(row);
+  });
+}
+function buyItem(itemId){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return;
+    Net.intent('buyItem', {itemId}); return;
+  }
+  if(gameOver || !players[current]) return;
+  if(shopPurchased[itemId]) return; // already bought
+  const item = SHOP_ITEMS.find(it=>it.id===itemId);
+  if(!item) return;
+  const pl=players[current];
+  if(pl.coins < item.price) return;
+  pl.coins -= item.price;
+  shopPurchased[itemId] = true;
+  pl.abilities.push(itemId);
+  addLog(`<b>${esc(pl.name)}</b> bought <b>${item.icon} ${item.name}</b> for 🪙 ${item.price}!`, 'ladder','🛒');
+  closeShop();
+  if(Net.isHost) Net.broadcastNow();
+}
+
+// ---- Ability usage --------------------------------------------------------
+function renderAbilities(){
+  const panel=document.getElementById('abilitiesPanel');
+  if(!panel) return;
+  const cur=players[current];
+  if(!cur || (!cur.abilities || cur.abilities.length===0) || gameOver){
+    panel.style.display='none'; return;
+  }
+  panel.style.display='block';
+  const list=document.getElementById('abilitiesList');
+  list.innerHTML='';
+  const icons={rookGun:'♜', bishopGun:'♝', queenGun:'♛', wizard:'🧙'};
+  const labels={rookGun:'Rook Gun', bishopGun:'Bishop Gun', queenGun:'Queen Gun', wizard:'Wizard'};
+  cur.abilities.forEach((ab, i)=>{
+    const btn=document.createElement('button');
+    btn.className='btn btn-ghost';
+    btn.style.cssText='padding:6px 8px;font-size:12px;display:flex;align-items:center;gap:4px';
+    btn.innerHTML=`<span style="font-size:14px">${icons[ab]||'?'}</span> ${labels[ab]||ab} <span style="margin-left:auto;color:var(--muted);background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:8px;font-size:10px">USE</span>`;
+    btn.addEventListener('click',()=> useAbility(ab));
+    list.appendChild(btn);
+  });
+}
+
+// ---- Ability usage (host-side) ---------------------------------------------
+function useAbility(abilityId){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return;
+    Net.intent('useAbility', {abilityId}); return;
+  }
+  if(gameOver || players[current].abilities.indexOf(abilityId)===-1) return;
+  if(phase!=='roll') return;
+  if(shootMode || swapMode) return;
+  if(abilityId==='wizard'){
+    // enter wizard targeting mode
+    const pl=players[current];
+    // find best piece on board to "cast from" (for visual purposes)
+    let bestIdx=0, bestPos=-1; pl.pieces.forEach((pc,i)=>{ if(pc.pos>bestPos && pc.pos>0 && pc.pos<100){bestPos=pc.pos; bestIdx=i;}});
+    if(bestPos<0){ addLog('Wizard needs a piece on board to cast from!', 'roll','⛔'); return; }
+    abilityMode={kind:'wizard', pieceIdx:bestIdx};
+    phase='ability';
+    addLog(`<b>${esc(pl.name)}</b> cast 🧙 <b>Wizard</b> — click an opponent's piece to freeze for 2 turns!`, 'roll','🧙');
+    renderAll();
+    return;
+  }
+  // gun abilities: reuse shootMode pattern
+  const item = SHOP_ITEMS.find(it=>it.id===abilityId);
+  if(!item || !item.gun) return;
+  const pl=players[current];
+  let bestIdx=0, bestPos=-1; pl.pieces.forEach((pc,i)=>{ if(pc.pos>bestPos && pc.pos>0 && pc.pos<100){bestPos=pc.pos; bestIdx=i;}});
+  if(bestPos<0){ addLog('Need a piece on board to shoot from!', 'roll','⛔'); return; }
+  abilityMode={kind:'gun', gun:item.gun, pieceIdx:bestIdx, from:pl.pieces[bestIdx].pos};
+  phase='ability';
+  addLog(`<b>${esc(pl.name)}</b> aimed <b>${item.gun.toUpperCase()} Gun</b> from ${abilityMode.from} — tap a highlighted opponent piece to <b>DESTROY</b> it!`, 'roll','🔫');
+  renderAll();
+}
+function cancelAbility(){
+  abilityMode=null; phase='roll'; renderAll();
+}
+function castAbility(targetPi, targetIdx){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return;
+    Net.intent('abilityTarget', {pi:targetPi, idx:targetIdx}); return;
+  }
+  if(!abilityMode || phase!=='ability') return;
+  if(targetPi === current) return; // can't target yourself
+  const targetPc = players[targetPi].pieces[targetIdx];
+  if(!targetPc || targetPc.pos===0) return;
+  if(abilityMode.kind==='wizard'){
+    // freeze the target piece for 2 turns
+    targetPc.frozen = 2;
+    const abilityIdx = players[current].abilities.indexOf('wizard');
+    if(abilityIdx !== -1) players[current].abilities.splice(abilityIdx, 1);
+    addLog(`<b>${esc(players[current].name)}</b> 🧙 FROZE ${esc(players[targetPi].name)}'s Piece ${targetIdx+1} on ${targetPc.pos} for <b>2 turns</b>!`, 'snake','🧊');
+    abilityMode=null;
+    // end turn immediately (ability usage consumes the entire turn)
+    nextTurn(!!pendingRoll && pendingRoll===6); // no extra turn from ability use
+    return;
+  }
+  // gun abilities — DESTROY the target piece
+  if(abilityMode.kind==='gun'){
+    if(!canShoot(abilityMode.from, targetPc.pos, abilityMode.gun)){
+      addLog('Not in line for that shot!', 'roll','⛔'); return;
+    }
+    const fromPos=abilityMode.from;
+    const hitPos=targetPc.pos;
+    // destroy the target piece (remove from array)
+    players[targetPi].pieces.splice(targetIdx,1);
+    // remove the ability from inventory (single-use)
+    const abId = SHOP_ITEMS.find(it=>it.gun===abilityMode.gun)?.id;
+    if(abId){
+      const ai = players[current].abilities.indexOf(abId);
+      if(ai !== -1) players[current].abilities.splice(ai, 1);
+    }
+    addLog(`<b>${esc(players[current].name)}</b> 🔫 <b>${abilityMode.gun.toUpperCase()} Gun</b> from ${fromPos} DESTROYED ${esc(players[targetPi].name)}'s Piece ${targetIdx+1} on ${hitPos}!`, 'snake','💥');
+    abilityMode=null;
+    nextTurn(!!pendingRoll && pendingRoll===6);
+    return;
+  }
+}
+async function choosePiece(pieceIdx){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return; // not your turn
+    Net.intent('choosePiece', {idx:pieceIdx}); return;
+  }
+  if(phase!=='choose' || gameOver) return;
+  const pl=players[current]; const pc=pl.pieces[pieceIdx]; if(!pc) return;
+  if(pc.swamp>0){ addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} is stuck in 🐊 swamp — can't move this turn!`, 'roll','🐊'); return; }
+  if(pc.cooldown>0){ addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} is on ⏳ cooldown (${pc.cooldown} turns) — can't move yet!`, 'roll','⏳'); return; }
+  const wasHurricane = !!pc.hurricane;
+  if(wasHurricane){
+    if(pc.pos - pendingRoll < 0){ addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} would go off board backward (<0) — can't move.`, 'roll','⛔'); return; }
+  } else {
+    if(pc.pos+pendingRoll>100){ addLog(`<b>${esc(pl.name)}</b> — Piece ${pieceIdx+1} can't move: ${pc.pos}+${pendingRoll}>100`, 'roll','⛔'); return; }
+  }
+  if(pc.pos===100) return;
+  phase='animating'; chooseHint.classList.remove('show');
+  const roll=pendingRoll;
+  const isBackward = wasHurricane;
+  // 1-turn cooldown: piece unavailable for the player's NEXT turn only (cooldown=2, dec at end of turn => 1 turn locked)
+  pc.cooldown = 2;
+  addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} on cooldown (skips next turn)`, 'roll','⏳');
+  if(isBackward){
+    addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} is in 🌀 hurricane — moving <b>backward ${roll}</b>!`, 'roll','🌀');
+    pc.hurricane=false;
+  }
+  const startPos=pc.pos, target = isBackward ? startPos - roll : startPos + roll;
+  // animate steps
+  if(isBackward){
+    for(let s=startPos-1; s>=target; s--){ pc.pos=s; renderAll(); highlightCell(s); await new Promise(r=>setTimeout(r,170)); }
+  } else {
+    for(let s=startPos+1; s<=target; s++){ pc.pos=s; renderAll(); highlightCell(s); await new Promise(r=>setTimeout(r,170)); }
+  }
+  await new Promise(r=>setTimeout(r,250));
+  let finalPos=pc.pos;
+  // death trap / elevator (apply even when moved backward)
+  if(finalPos===DEATH_TRAP){ addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} fell into 💀 Death Trap 13 — piece destroyed, sent home!`, 'snake','💀'); await new Promise(r=>setTimeout(r,450)); pc.pos=0; renderAll(); highlightCell(13); await new Promise(r=>setTimeout(r,450)); finalPos=0; }
+  else if(isElevator(finalPos)){
+    let eFrom=finalPos, eTo=elevatorDest(eFrom);
+    addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} rode 🛗 elevator ${eFrom} → ${eTo} (one row ${eTo>eFrom?'up':'down'})`, 'ladder','🛗');
+    await new Promise(r=>setTimeout(r,450));
+    pc.pos=eTo; renderAll(); highlightCell(eTo);
+    await new Promise(r=>setTimeout(r,450));
+    // chain: keep riding if destination is also an elevator
+    while(isElevator(pc.pos)){
+      const next=elevatorDest(pc.pos);
+      addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} chained 🛗 elevator ${pc.pos} → ${next}`, 'ladder','🛗');
+      await new Promise(r=>setTimeout(r,450));
+      pc.pos=next; renderAll(); highlightCell(next);
+      await new Promise(r=>setTimeout(r,450));
+    }
+    finalPos=pc.pos;
+  }
+
+  // money cell +1 coin (after ladders/snakes)
+  if(isMoney(pc.pos)){
+    const before=pl.coins; pl.coins++; addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} landed on 🪙 money ${pc.pos} → +1 coin 🪙 ${before}→${pl.coins}`, 'ladder','🪙'); renderAll();
+  }
+  // hurricane/swamp apply AFTER money (on final pos)
+  if(isHurricane(pc.pos)){
+    pc.hurricane=true; addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} hit 🌀 hurricane on ${pc.pos} — next move for this piece goes <b>backward</b>!`, 'roll','🌀'); renderAll();
+  }
+  if(isSwamp(pc.pos)){
+    pc.swamp=2; // will tick to 1 at end of this turn, then 0 next turn => locked for exactly one of THIS piece's next opportunities
+    // Actually to make it one full round of that player, set to 2 and decrement in nextTurn each time that player ends turn
+    // Simplify: set to 1 and use flag? With current nextTurn we decrement immediately after this move, so need 2 to survive one full cycle
+    addLog(`<b>${esc(pl.name)}</b> Piece ${pieceIdx+1} stuck in 🐊 swamp on ${pc.pos} — this piece skips its <b>next turn</b>!`, 'snake','🐊'); renderAll();
+  }
+  // stack & evolve
+  // win check before card — 100 never a card cell, but keep first
+  if(pc.pos===100){
+    gameOver=true; renderAll();
+    const lvlLabel = pc.level>1 ? `Lv${pc.level} ${LEVEL_NAME[pc.level]} ` : '';
+    document.getElementById('winTitle').textContent=`${pl.name} wins! 🏆`;
+    document.getElementById('winSub').textContent=`${lvlLabel}Piece ${pieceIdx+1} reached 100 · ${pl.totalMoves} rolls · Round ${round}`;
+    document.getElementById('winOverlay').style.display='grid';
+    addLog(`<b>${esc(pl.name)}</b> ${lvlLabel}Piece ${pieceIdx+1} reached 100 and WON!`, 'win','🏆');
+    launchConfetti(); return;
+  }
+  // COMBAT: level-based combat when landing on opponent's piece
+  const opp = findOpponentOnCell(pc.pos, current);
+  if(opp){
+    const oppPl = players[opp.pi], oppPc = oppPl.pieces[opp.idx];
+    const atkLvl = pc.level, defLvl = oppPc.level;
+    const atkName = LEVEL_NAME[atkLvl] || 'Piece', defName = LEVEL_NAME[defLvl] || 'Piece';
+    const atkLabel = atkLvl > 1 ? ` Lv${atkLvl} ${atkName}` : '';
+    const defLabel = defLvl > 1 ? ` Lv${defLvl} ${defName}` : '';
+    if(atkLvl < defLvl){
+      // attacker wins, defender loses 1 level
+      addLog(`⚔️ <b>${esc(pl.name)}</b> Piece ${pieceIdx+1}${atkLabel} attacked ${esc(oppPl.name)}${defLabel} Piece ${opp.idx+1} at cell ${pc.pos} — Defender down to Lv${defLvl-1}!`, 'snake', '⚔️');
+      oppPc.level--;
+      if(oppPc.level <= 0){
+        addLog(`💀 <b>${esc(oppPl.name)}</b> Piece ${opp.idx+1} reached Lv0 — removed!`, 'snake', '💀');
+        oppPl.pieces.splice(opp.idx, 1);
+      }
+      renderAll(); await new Promise(r => setTimeout(r, 400));
+      nextTurn(roll===6); return;
+    } else {
+      // attacker wins, defender removed
+      addLog(`⚔️ <b>${esc(pl.name)}</b> Piece ${pieceIdx+1}${atkLabel} attacked ${esc(oppPl.name)}${defLabel} Piece ${opp.idx+1} at cell ${pc.pos} — <b>defender defeated!</b>`, 'snake', '⚔️');
+      oppPl.pieces.splice(opp.idx, 1);
+    }
+    renderAll(); await new Promise(r => setTimeout(r, 400));
+    // attacker survived — continue with normal post-movement flow (card cells, merge, etc.)
+  }
+  // card cell? offer coin OR draw choice (card stays hidden until drawn)
+  if(CARD_CELLS.includes(pc.pos)){
+    openCardChoice(pieceIdx);
+    return; // continuation in card handlers -> nextTurn
+  }
+  // otherwise, offer the level-up/keep-separate choice, then end turn
+  await postSettle(pieceIdx, roll);
+}
+async function postSettle(pieceIdx, roll){
+  const pl=players[current]; const pc=pl.pieces[pieceIdx]; if(!pc) { nextTurn(roll===6); return; }
+  await new Promise(r=>setTimeout(r,200));
+  const openedMerge = checkStackChoice(pl, pc.pos, pieceIdx, ()=>{ nextTurn(roll===6); });
+  if(!openedMerge){
+    await new Promise(r=>setTimeout(r,200));
+    nextTurn(roll===6);
+  }
+}
+function findOpponentOnCell(pos, selfPi){
+  for(let pi=0; pi<players.length; pi++){
+    if(pi===selfPi) continue;
+    const idx = players[pi].pieces.findIndex(p=>p.pos===pos);
+    if(idx>=0) return {pi, idx};
+  }
+  return null;
+}
+
+// Returns true if it opened the merge-choice modal (resolution will call onDone), false otherwise.
+let pendingMerge=null; // {player, pos, indices, moverIdx, newLevel, onDone}
+function checkStackChoice(player, pos, moverIdx, onDone){
+  if(pos===0 || pos===100 || pos===DEATH_TRAP){ return false; }
+  const indices=[]; player.pieces.forEach((pc,i)=>{ if(pc.pos===pos) indices.push(i); });
+  if(indices.length<2){ return false; }
+  // build the offer: leveling up sums levels (cap 4); keeping separate leaves them as-is
+  const totalLevel = indices.reduce((s,i)=>s+player.pieces[i].level,0);
+  const newLevel = Math.min(4, totalLevel);
+  const counts = indices.map(i=>player.pieces[i].level);
+  pendingMerge={player, pos, indices, moverIdx, newLevel, onDone,
+    sum:totalLevel, keepDesc:counts.map(l=>'Lv'+l).join(' + ')};
+  const box=document.getElementById('mergeBox');
+  box.innerHTML=`<div class="m-icon">⭐</div><h3>Your pieces share cell ${pos}</h3>
+    <p>You have <b>${indices.length}</b> pieces on ${pos} (${pendingMerge.keepDesc}).<br>
+    <b>Level Up?</b> Merge them into one <b>Lv${newLevel} ${LEVEL_NAME[newLevel]}</b> ${LEVEL_ICON[newLevel] || ''} (levels ${totalLevel>4?'sum capped at 4':'sum to '+totalLevel}).<br>
+    Or keep them as separate pieces (each stays Lv${counts.join('/')}).</p>`;
+  document.getElementById('mergeLevelUp').textContent = `⬆ Merge → Lv${newLevel}`;
+  document.getElementById('mergeOverlay').style.display='grid';
+  if(Net.isHost) Net.broadcastNow();
+  return true;
+}
+function resolveMerge(mergeUp){
+  const m=pendingMerge; if(!m){ return; }
+  document.getElementById('mergeOverlay').style.display='none';
+  pendingMerge=null;
+  if(mergeUp){
+    const keeperIdx = m.indices.includes(m.moverIdx) ? m.moverIdx : m.indices[0];
+    const keeper=m.player.pieces[keeperIdx];
+    keeper.level=m.newLevel;
+    const toRemove=m.indices.filter(i=>i!==keeperIdx).sort((a,b)=>b-a);
+    toRemove.forEach(i=> m.player.pieces.splice(i,1));
+    addLog(`<b>${esc(m.player.name)}</b> ⭐ LEVEL UP! ${m.indices.length} pieces on ${m.pos} → <b>Lv${m.newLevel} ${LEVEL_NAME[m.newLevel]}</b> ${LEVEL_ICON[m.newLevel]}`, 'merge','⭐');
+    renderAll(); highlightCell(m.pos);
+  } else {
+    addLog(`<b>${esc(m.player.name)}</b> kept ${m.indices.length} separate pieces on ${m.pos}.`, 'roll','🧩');
+  }
+  m.onDone && m.onDone(mergeUp);
+}
+
+function nextTurn(extra){
+  if(gameOver) return;
+  // swamp countdown for the player who just played (if they had a swamped piece locked this turn, release after this turn)
+  const justPlayer = players[current];
+  if(justPlayer){
+    justPlayer.pieces.forEach(pc=>{ if(pc.swamp>0) pc.swamp--; if(pc.cooldown>0) pc.cooldown--; });
+  }
+  // decrement frozen timers for ALL players' pieces (global countdown)
+  players.forEach(pl=>{ pl.pieces.forEach(pc=>{ if(pc.frozen>0) pc.frozen--; }); });
+  if(!extra){ current=(current+1)%players.length; if(current===0) round++; }
+  // Anti-deadlock: ensure next player always has at least one playable piece
+  const nextPl = players[current];
+  if(nextPl){
+    const nextMovable = movableIndices(nextPl, 1);
+    if(nextMovable.length===0 && nextPl.pieces.length > 0){
+      let bestIdx=-1, bestCd=999;
+      nextPl.pieces.forEach((pc,i)=>{
+        if(pc.pos===0 || pc.pos>=100) return;
+        if(pc.frozen>0) return;
+        if(pc.cooldown<bestCd && pc.cooldown>0){ bestCd=pc.cooldown; bestIdx=i; }
+      });
+      if(bestIdx>=0){
+        nextPl.pieces[bestIdx].cooldown=0;
+        addLog(`⚡ <b>${esc(nextPl.name)}</b> piece ${bestIdx+1} cooldown reset (anti-deadlock)`, 'roll','⚡');
+      }
+      if(nextPl.pieces.length===1){
+        const onlyPc = nextPl.pieces[0];
+        if(onlyPc.cooldown>0){ onlyPc.cooldown=0; addLog(`⚡ <b>${esc(nextPl.name)}</b> sole piece cooldown reset (1 piece rule)`, 'roll','⚡'); }
+      }
+    }
+  }
+  else addLog(`<b>${esc(players[current].name)}</b> rolled a 6 — extra turn!`, 'roll','🎲');
+  pendingRoll=0; phase='roll'; renderAll();
+  abilityMode=null;
+  movePickMode=null;
+  // hint if current player's pieces have status
+  const cur=players[current];
+  if(cur){
+    const swamped = cur.pieces.filter(pc=>pc.swamp>0).length;
+    const hurr = cur.pieces.filter(pc=>pc.hurricane).length;
+    if(swamped) addLog(`<b>${esc(cur.name)}</b> has ${swamped} piece(s) stuck in 🐊 swamp — can't move this turn.`, 'roll','🐊');
+    if(hurr) addLog(`<b>${esc(cur.name)}</b> has ${hurr} piece(s) in 🌀 hurricane — next move goes BACKWARD.`, 'roll','🌀');
+    const onCooldown = cur.pieces.filter(pc=>pc.cooldown>0).length;
+    if(onCooldown) addLog(`<b>${esc(cur.name)}</b> has ${onCooldown} piece(s) on ⏳ cooldown (2 turns).`, 'roll','⏳');
+    const frozen = cur.pieces.filter(pc=>pc.frozen>0).length;
+    if(frozen) addLog(`<b>${esc(cur.name)}</b> has ${frozen} piece(s) ❄️ frozen — can't move them this turn.`, 'roll','🧊');
+  }
+}
+function launchConfetti(){ const c=document.getElementById('confetti'); c.innerHTML=''; const cols=[...COLORS,'#FFD700','#7c5cff']; for(let i=0;i<90;i++){ const el=document.createElement('i'); el.style.left=Math.random()*100+'vw'; el.style.background=cols[Math.floor(Math.random()*cols.length)]; el.style.animationDuration=(1.2+Math.random()*1.8)+'s'; el.style.animationDelay=(Math.random()*0.6)+'s'; el.style.transform=`rotate(${Math.random()*360}deg)`; el.style.borderRadius=Math.random()>0.5?'50%':'2px'; el.style.width=(6+Math.random()*8)+'px'; el.style.height=(6+Math.random()*8)+'px'; c.appendChild(el); } setTimeout(()=>c.innerHTML='',4200); }
+
+// Setup
+function buildNameGrid(){
+  const g=document.getElementById('nameGrid'); g.innerHTML='';
+  for(let i=0;i<4;i++){ const d=document.createElement('div'); d.className='field'; d.style.opacity=i<playerCount?'1':'0.35';
+    d.innerHTML=`<label><span class="color-dot" style="background:${COLORS[i]}"></span> Player ${i+1}</label><input type="text" placeholder="Player ${i+1}" value="${['Alex','Sam','Maya','Leo'][i]}" ${i>=playerCount?'disabled':''} id="pname${i}">`; g.appendChild(d); }
+}
+document.querySelectorAll('[data-players]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-players]').forEach(x=>{x.classList.remove('btn-primary');x.classList.add('btn-ghost')});
+  b.classList.remove('btn-ghost');b.classList.add('btn-primary'); playerCount=parseInt(b.dataset.players); buildNameGrid();
+}));
+document.querySelectorAll('[data-pieces]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-pieces]').forEach(x=>{x.classList.remove('btn-primary');x.classList.add('btn-ghost')});
+  b.classList.remove('btn-ghost');b.classList.add('btn-primary');
+  let v=parseInt(b.dataset.pieces);
+  // clamp 1..4: any number outside the range is forced into it
+  piecesPerPlayer = Math.max(1, Math.min(4, Math.round(v)||1));
+  const note=document.getElementById('piecesNote');
+  if(note) note.innerHTML=`Each player starts with <b>${piecesPerPlayer} piece${piecesPerPlayer>1?'s':''}</b> (Lv1).`;
+}));
+function currentPiecesPerPlayer(){ return Math.max(1, Math.min(4, Math.round(piecesPerPlayer)||1)); }
+function startGame(){
+  const names=[]; for(let i=0;i<playerCount;i++){ const v=document.getElementById('pname'+i).value.trim()||`Player ${i+1}`; names.push(v); }
+  const ppc = currentPiecesPerPlayer();
+  generateSpecialCells();
+  deck=buildDeck(); discard=[]; players=names.map((n,i)=>buildPiecesForPlayer(n,COLORS[i],ppc)); current=0;round=1;gameOver=false;phase='roll';pendingRoll=0; shootMode=null; swapMode=null; movePickMode=null; abilityMode=null; shopPurchased={}; pendingCard=null; pendingCardPieceIdx=null;
+  document.getElementById('setupOverlay').style.display='none'; document.getElementById('winOverlay').style.display='none'; document.getElementById('cardOverlay').style.display='none'; document.getElementById('confetti').innerHTML=''; logEl.innerHTML='';
+  buildBoard(); renderAll(); diceEl.innerHTML='<div style="font-size:30px">🎲</div>'; addLog(`Game started — ${playerCount} players, ${ppc} piece${ppc>1?'s':''} + 3 🪙 each. Draw on 11·22·33·44·55·66·77·88!`, 'roll','🎮'); addLog(`Specials: 🪙 ${MONEY_CELLS.join(',')} · 🌀 ${HURRICANE_CELLS.join(',')} · 🐊 ${SWAMP_CELLS.join(',')}`, 'roll','🗺️');
+}
+document.getElementById('startBtn').addEventListener('click',startGame);
+document.getElementById('btnNew').addEventListener('click',()=>{document.getElementById('setupOverlay').style.display='grid'; buildNameGrid();});
+// --- Named action handlers (so both DOM listeners and host-intent routing can call them) ---
+async function cardConfirmHandler(){
+  if(!pendingCard) return;
+  const card=pendingCard, idx=pendingCardPieceIdx;
+  closeCardOverlay();
+  const won = await resolveCard(card, idx);
+  pendingCard=null; pendingCardPieceIdx=null;
+  renderAll();
+  if(gameOver) return;
+  if(!won){
+    // movement card -> possibly a level-up/keep choice before ending turn
+    const openedMerge = checkStackChoice(players[current], players[current].pieces[idx]?.pos||0, idx, ()=>nextTurn(pendingRoll===6));
+    if(!openedMerge){
+      await new Promise(r=>setTimeout(r,300));
+      nextTurn(pendingRoll===6);
+    }
+  }
+}
+function cardTakeCoinHandler(){
+  // coin chosen at the CHOICE step — no card drawn, nothing revealed
+  const idx=pendingCardPieceIdx;
+  closeCardOverlay();
+  const pl=players[current]; const before=pl.coins; pl.coins=Math.max(0, pl.coins+1);
+  addLog(`<b>${esc(pl.name)}</b> took <b>1 🪙</b> at 🃏 cell ${pl.pieces[idx]?.pos||''} (no card drawn) → 🪙 ${before}→${pl.coins}`, 'roll','🪙');
+  pendingCard=null; pendingCardPieceIdx=null;
+  renderAll();
+  if(gameOver) return;
+  const extra = pendingRoll===6;
+  setTimeout(()=>{
+    const openedMerge = checkStackChoice(players[current], players[current].pieces[idx]?.pos||0, idx, ()=>nextTurn(extra));
+    if(!openedMerge) nextTurn(extra);
+  }, 350);
+}
+// guest input gating: when online as guest, send intent instead of acting locally.
+// Guests may only act on their own turn — reject otherwise.
+function guestGate(type, payload){
+  if(Net.isGuest()){
+    if(Net.myPlayerIndex() !== current) return false; // not your turn
+    Net.intent(type, payload); return true;
+  }
+  return false;
+}
+
+document.getElementById('cardConfirm').addEventListener('click', ()=>{ if(!guestGate('cardConfirm')) cardConfirmHandler(); });
+document.getElementById('cardDraw').addEventListener('click', ()=>{ if(!guestGate('cardDraw')) doDrawCard(); });
+document.getElementById('cardTakeCoin').addEventListener('click', ()=>{ if(!guestGate('cardTakeCoin')) cardTakeCoinHandler(); });
+document.getElementById('mergeKeep').addEventListener('click', ()=>{ if(!guestGate('mergeKeep')) resolveMerge(false); });
+document.getElementById('mergeLevelUp').addEventListener('click', ()=>{ if(!guestGate('mergeLevelUp')) resolveMerge(true); });
+window.cancelShoot=function(){ if(guestGate('shootCancel')) return; cancelShoot(); };
+window.cancelSwap=function(){ if(guestGate('swapCancel')) return; cancelSwap(); };
+window.cancelMovePick=function(){ if(guestGate('movePickCancel')) return; cancelMovePick(); };
+
+document.getElementById('playAgain').addEventListener('click',()=>{
+  generateSpecialCells();
+  deck=buildDeck(); discard=[];
+  const ppc = currentPiecesPerPlayer();
+  players.forEach(pl=>{
+    const fresh=buildPiecesForPlayer(pl.name, pl.color, ppc);
+    pl.pieces=fresh.pieces; pl.coins=fresh.coins; pl.hand=[]; pl.guns={rook:0,bishop:0,queen:0}; pl.totalMoves=0;
+  });
+  current=0;round=1;gameOver=false;phase='roll';pendingRoll=0; shootMode=null; swapMode=null; movePickMode=null; abilityMode=null; shopPurchased={}; pendingCard=null; pendingCardPieceIdx=null;
+  buildBoard(); document.getElementById('winOverlay').style.display='none'; document.getElementById('cardOverlay').style.display='none'; document.getElementById('confetti').innerHTML=''; logEl.innerHTML=''; renderAll(); diceEl.innerHTML='<div style="font-size:30px">🎲</div>'; addLog('New game — specials reshuffled, pieces & coins reset!', 'roll','🎮'); addLog(`Specials: 🪙 ${MONEY_CELLS.join(',')} · 🌀 ${HURRICANE_CELLS.join(',')} · 🐊 ${SWAMP_CELLS.join(',')}`, 'roll','🗺️');
+});
+document.getElementById('changePlayers').addEventListener('click',()=>{document.getElementById('winOverlay').style.display='none';document.getElementById('setupOverlay').style.display='grid';buildNameGrid();});
+document.getElementById('btnRules').addEventListener('click',()=>document.getElementById('rulesOverlay').style.display='grid');
+document.getElementById('closeRules').addEventListener('click',()=>document.getElementById('rulesOverlay').style.display='none');
+document.getElementById('rulesOverlay').addEventListener('click',e=>{if(e.target.id==='rulesOverlay') e.currentTarget.style.display='none'});
+document.getElementById('shopOverlay').addEventListener('click',e=>{if(e.target.id==='shopOverlay') e.currentTarget.style.display='none'});
+document.getElementById('clearLog').addEventListener('click',()=>logEl.innerHTML='');
+rollBtn.addEventListener('click',doRoll); diceEl.addEventListener('click',doRoll);
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space' && document.getElementById('setupOverlay').style.display==='none' && !gameOver && phase==='roll'){ e.preventDefault(); doRoll(); }
+  if(e.code==='Enter' && document.getElementById('setupOverlay').style.display!=='none') startGame();
+  if(/^[1-4]$/.test(e.key) && phase==='choose'){ const idx=parseInt(e.key)-1; choosePiece(idx); }
+});
+/* ===================== ONLINE MULTIPLAYER (host = authority) ===================== */
+/* Host runs the normal engine; guests render snapshots and send intents. Server relays. */
+const Net = {
+  ws:null, connected:false, room:null, myId:null, isHost:false, online:false,
+  roomPlayers:[], pidToIndex:{},
+  isGuest(){ return this.online && !this.isHost; },
+  myPlayerIndex(){ return this.pidToIndex[this.myId]; },
+  intent(type, payload){ this.sendRaw({type:'intent', payload:{type, ...(payload||{})}}); },
+  sendRaw(o){ if(this.ws && this.ws.readyState===1) this.ws.send(JSON.stringify(o)); },
+  broadcastNow(){ if(this.isHost) this.sendRaw({type:'snapshot', payload: serializeState()}); },
+  scheduleBroadcast(){ if(!this.isHost) return; if(this._bt) return; this._bt=setTimeout(()=>{ this._bt=null; this.broadcastNow(); }, 55); },
+  connect(){
+    const proto = location.protocol==='https:'?'wss':'ws';
+    const url = `${proto}://${location.host}`;
+    try { this.ws = new WebSocket(url); } catch(e){ return; }
+    this.ws.addEventListener('open', ()=>{ this.connected=true; setConn(true,''); });
+    this.ws.addEventListener('close', ()=>{ this.connected=false; this.online=false; this.isHost=false; setConn(false,'disconnected'); });
+    this.ws.addEventListener('error', ()=>{ setConn(false,'connection error'); });
+    this.ws.addEventListener('message', e=>{ let m; try{ m=JSON.parse(e.data); }catch(_){ return; } this.onMessage(m.type, m.payload); });
+  },
+  onMessage(type, payload){
+    switch(type){
+      case 'created': this.room=payload; this.isHost=true; this.online=true; this.myId=payload.you; this.roomPlayers=payload.players; rebuildPidMap(); showRoom(payload); break;
+      case 'joined': this.room=payload; this.isHost=false; this.online=true; this.myId=payload.you; this.roomPlayers=payload.players; rebuildPidMap(); showRoom(payload); break;
+      case 'room': this.room=payload; this.roomPlayers=payload.players; rebuildPidMap(); if(this.room) showRoom(payload); break;
+      case 'started': this.room=payload; this.roomPlayers=payload.players; rebuildPidMap(); hideLobby(); if(this.isHost) hostStart(this.roomPlayers.map(p=>p.name)); else { /* wait for snapshot to build state */ } break;
+      case 'lobbyReset': showLobby(payload&&payload.message); break;
+      case 'snapshot': applySnapshot(payload); break;
+      case 'intent': hostIntent(payload.from, payload.intent); break;
+      case 'error': lobbyStatus(payload&&payload.message || 'Error'); break;
+    }
+  }
+};
+function rebuildPidMap(){ Net.pidToIndex={}; Net.roomPlayers.forEach((p,i)=>{ Net.pidToIndex[p.id]=i; }); }
+
+function setConn(ok, msg){
+  const pill=document.getElementById('connPill'); if(!pill) return;
+  pill.className='conn-pill show '+(ok?'on':'off');
+  pill.textContent = ok ? '● online' : '● offline'+(msg?(' · '+msg):'');
+  if(!ok) setTimeout(()=>{ pill.classList.remove('show'); }, 3000);
+}
+function showLobby(msg){
+  document.getElementById('lobby').classList.add('show');
+  document.getElementById('lobbyRoom').style.display='none';
+  if(msg) lobbyStatus(msg);
+}
+function lobbyStatus(m){ const s=document.getElementById('lobbyStatus'); if(s) s.textContent=m||''; }
+function showRoom(info){
+  const lobby=document.getElementById('lobby'); lobby.classList.add('show');
+  document.getElementById('lobbyRoom').style.display='block';
+  document.getElementById('lobbyCodeBig').textContent=info.code;
+  const ul=document.getElementById('lobbyPlayers'); ul.innerHTML='';
+  info.players.forEach(p=>{
+    const li=document.createElement('li');
+    const dot=document.createElement('span'); dot.className='dot'; dot.style.background=COLORS[info.players.indexOf(p)]||'#fff';
+    li.appendChild(dot);
+    const name=document.createElement('span'); name.textContent=p.name+(p.id===Net.myId?' (you)':''); li.appendChild(name);
+    if(p.isHost){ const t=document.createElement('span'); t.className='host-tag'; t.textContent='HOST'; li.appendChild(t); }
+    ul.appendChild(li);
+  });
+  const startBtn=document.getElementById('btnStart');
+  startBtn.disabled = !(Net.isHost && info.players.length>=2);
+  startBtn.textContent = Net.isHost ? '▶ Start Game' : 'Waiting for host to start…';
+  // host-only pieces selector
+  const piecesRow=document.getElementById('lobbyPiecesRow');
+  if(piecesRow) piecesRow.style.display = Net.isHost ? 'block' : 'none';
+}
+function hideLobby(){ document.getElementById('lobby').classList.remove('show'); }
+
+function hostStart(names){
+  // builds the authoritative game from the room's player list, in room order
+  playerCount=names.length;
+  const ppc = currentPiecesPerPlayer();
+  generateSpecialCells();
+  deck=buildDeck(); discard=[];
+  players=names.map((n,i)=>buildPiecesForPlayer(n,COLORS[i],ppc));
+  current=0;round=1;gameOver=false;phase='roll';pendingRoll=0; shootMode=null; swapMode=null; movePickMode=null; abilityMode=null; shopPurchased={}; pendingCard=null; pendingCardPieceIdx=null;
+  document.getElementById('setupOverlay').style.display='none'; document.getElementById('winOverlay').style.display='none'; document.getElementById('cardOverlay').style.display='none'; document.getElementById('confetti').innerHTML=''; logEl.innerHTML='';
+  buildBoard(); renderAll(); diceEl.innerHTML='<div style="font-size:30px">🎲</div>'; addLog(`Online game started — ${playerCount} players connected! Host: ${names[0]}.`, 'roll','🌐'); addLog(`Specials: 🪙 ${MONEY_CELLS.join(',')} · 🌀 ${HURRICANE_CELLS.join(',')} · 🐊 ${SWAMP_CELLS.join(',')}`, 'roll','🗺️');
+  Net.broadcastNow();
+}
+
+// ---- Snapshot serialization / application -------------------------------
+function serializeState(){
+  const cardOv=document.getElementById('cardOverlay');
+  const cardOpen = cardOv && cardOv.style.display==='grid';
+  const cardStep = cardOpen && document.getElementById('cardRevealActions').style.display!=='none' ? 'reveal' : 'choice';
+  const mergeOv=document.getElementById('mergeOverlay');
+  const mergeOpen = mergeOv && mergeOv.style.display==='grid';
+  return {
+    v:1,
+    players: players.map(p=>({ name:p.name, color:p.color, coins:p.coins, hand:p.hand, totalMoves:p.totalMoves, abilities:p.abilities||[],
+      guns:{rook:p.guns.rook||0,bishop:p.guns.bishop||0,queen:p.guns.queen||0},
+      pieces:p.pieces.map(pc=>({pos:pc.pos, level:pc.level, moves:pc.moves, hurricane:!!pc.hurricane, swamp:pc.swamp, cooldown:pc.cooldown||0, frozen:pc.frozen||0})) })),
+    current, round, gameOver, phase, pendingRoll,
+    shopPurchased: shopPurchased,
+    deckCount: deck.length, discardCount: discard.length,
+    cardOverlay: cardOpen ? { open:true, step:cardStep, title:document.getElementById('cardOverlayTitle').textContent, sub:document.getElementById('cardOverlaySub').textContent, card: (cardStep==='reveal'?pendingCard:null) } : { open:false },
+    mergeOverlay: mergeOpen ? { open:true, html:document.getElementById('mergeBox').innerHTML, label:document.getElementById('mergeLevelUp').textContent } : { open:false },
+    shootMode: shootMode ? { gun:shootMode.gun, owner:shootMode.owner, pieceIdx:shootMode.pieceIdx, from:shootMode.from } : null,
+    swapMode: swapMode ? { owner:swapMode.owner, handIdx:swapMode.handIdx, pickedOwn:swapMode.pickedOwn, pickedOwnIdx:swapMode.pickedOwnIdx, pickedPos:swapMode.pickedPos } : null,
+    movePickMode: movePickMode ? { handIdx:movePickMode.handIdx, card:movePickMode.card } : null,
+    abilityMode: abilityMode ? { kind:abilityMode.kind, gun:abilityMode.gun, pieceIdx:abilityMode.pieceIdx, from:abilityMode.from } : null,
+    winOverlay: gameOver ? { open:true, title:document.getElementById('winTitle').textContent, sub:document.getElementById('winSub').textContent } : { open:false },
+    turnName: (typeof turnName!=='undefined' && turnName)?turnName.textContent:'',
+    logHTML: logEl.innerHTML
+  };
+}
+function applySnapshot(s){
+  if(!s || s.v!==1) return;
+  players = s.players.map(p=>({ name:p.name, color:p.color, coins:p.coins, hand:p.hand, totalMoves:p.totalMoves, abilities:p.abilities||[],
+    guns:{rook:p.guns.rook||0,bishop:p.guns.bishop||0,queen:p.guns.queen||0},
+    pieces:p.pieces.map(pc=>({pos:pc.pos, level:pc.level, moves:pc.moves, hurricane:!!pc.hurricane, swamp:pc.swamp, cooldown:pc.cooldown||0, frozen:pc.frozen||0})) }));
+  current=s.current; round=s.round; gameOver=s.gameOver; phase=s.phase; pendingRoll=s.pendingRoll;
+  // deck/discard counts are tracked on host; guests only need counts
+  deck = new Array(Math.max(0,s.deckCount)).fill(null);
+  discard = new Array(Math.max(0,s.discardCount)).fill(null);
+  shootMode = s.shootMode;
+  swapMode = s.swapMode;
+  movePickMode = s.movePickMode || null;
+  shopPurchased = s.shopPurchased || {};
+  abilityMode = s.abilityMode || null;
+  // card overlay
+  const co=document.getElementById('cardOverlay');
+  if(s.cardOverlay.open){
+    co.style.display='grid';
+    document.getElementById('cardOverlayTitle').textContent=s.cardOverlay.title;
+    document.getElementById('cardOverlaySub').textContent=s.cardOverlay.sub;
+    const choice=document.getElementById('cardChoiceActions'), reveal=document.getElementById('cardRevealActions');
+    if(s.cardOverlay.step==='choice'){ choice.style.display='flex'; reveal.style.display='none'; document.getElementById('cardFront').innerHTML=''; document.getElementById('cardFlip').classList.remove('flipped','draw-anim'); }
+    else { choice.style.display='none'; reveal.style.display='flex'; const c=s.cardOverlay.card; document.getElementById('cardFront').innerHTML = c?`<div class="cf-icon">${c.icon}</div><div class="cf-name">${esc(c.name)}</div><div class="cf-desc">${esc(c.desc)}</div>`:''; const flip=document.getElementById('cardFlip'); flip.classList.add('flipped'); }
+  } else { co.style.display='none'; }
+  // merge overlay
+  const mo=document.getElementById('mergeOverlay');
+  if(s.mergeOverlay.open){ mo.style.display='grid'; document.getElementById('mergeBox').innerHTML=s.mergeOverlay.html; document.getElementById('mergeLevelUp').textContent=s.mergeOverlay.label; }
+  else mo.style.display='none';
+  // win overlay
+  const wo=document.getElementById('winOverlay');
+  if(s.winOverlay.open){ wo.style.display='grid'; document.getElementById('winTitle').textContent=s.winOverlay.title; document.getElementById('winSub').textContent=s.winOverlay.sub; }
+  else wo.style.display='none';
+  logEl.innerHTML = s.logHTML || '';
+  renderAll();
+}
+
+// ---- Host: route guest intents to the real engine ------------------------
+function hostIntent(from, intent){
+  if(!Net.isHost) return;
+  const idx=Net.pidToIndex[from]; if(idx===undefined) return;
+  const t=intent.type, p=intent;
+  // Only the current player may act on game actions. Prevents other players from
+  // rolling / choosing / playing cards on behalf of the active player.
+  if(idx !== current) return;
+  switch(t){
+    case 'roll': doRoll(); break;
+    case 'choosePiece': choosePiece(p.idx); break;
+    case 'cardDraw': doDrawCard(); break;
+    case 'cardTakeCoin': cardTakeCoinHandler(); break;
+    case 'cardConfirm': cardConfirmHandler(); break;
+    case 'mergeKeep': resolveMerge(false); break;
+    case 'mergeLevelUp': resolveMerge(true); break;
+    case 'playCard': playCard(p.ci); break;
+    case 'movePick': pickPieceForMove(p.idx); break;
+    case 'movePickCancel': cancelMovePick(); break;
+    case 'shootPick': doShoot(p.pi,p.idx); break;
+    case 'shootCancel': cancelShoot(); break;
+    case 'enterShoot': enterShootMode(p.gun); break;
+    case 'swapPickOwn': pickOwnForSwap(p.idx); break;
+    case 'swapDo': doSwap(p.pi,p.idx); break;
+    case 'swapCancel': cancelSwap(); break;
+    case 'buyItem': buyItem(p.itemId); break;
+    case 'useAbility': useAbility(p.abilityId); break;
+    case 'abilityTarget': castAbility(p.pi,p.idx); break;
+    case 'cancelAbility': cancelAbility(); break;
+  }
+}
+
+// ---- Lobby wiring -------------------------------------------------------
+(function wireLobby(){
+  const nameInput=document.getElementById('lobbyName');
+  if(nameInput && !nameInput.value) nameInput.value='Player'+(Math.floor(Math.random()*900)+100);
+  const btnCreate=document.getElementById('btnCreate');
+  const btnJoin=document.getElementById('btnJoin');
+  const btnStart=document.getElementById('btnStart');
+  const btnLeave=document.getElementById('btnLeaveLobby');
+  const btnLocal=document.getElementById('btnLocal');
+  document.querySelectorAll('[data-lobby-pieces]').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-lobby-pieces]').forEach(x=>{x.classList.remove('btn-primary');x.classList.add('btn-ghost')});
+    b.classList.remove('btn-ghost');b.classList.add('btn-primary');
+    piecesPerPlayer = Math.max(1, Math.min(4, Math.round(parseInt(b.dataset.lobbyPieces))||1));
+  }));
+  if(btnCreate) btnCreate.addEventListener('click', ()=>{ Net.connect(); const iv=setInterval(()=>{ if(Net.connected){ clearInterval(iv); Net.sendRaw({type:'create', payload:{name:document.getElementById('lobbyName').value.trim()||'Host'}}); } }, 50); });
+  if(btnJoin) btnJoin.addEventListener('click', ()=>{ Net.connect(); const code=document.getElementById('lobbyCode').value.trim().toUpperCase(); if(code.length!==4){ lobbyStatus('Enter the 4-letter room code.'); return; } const iv=setInterval(()=>{ if(Net.connected){ clearInterval(iv); Net.sendRaw({type:'join', payload:{code, name:document.getElementById('lobbyName').value.trim()||'Guest'}}); } }, 50); });
+  if(btnStart) btnStart.addEventListener('click', ()=>{ if(Net.isHost) Net.sendRaw({type:'start', payload:{}}); });
+  if(btnLeave) btnLeave.addEventListener('click', ()=>{ Net.sendRaw({type:'leave', payload:{}}); Net.online=false; Net.isHost=false; document.getElementById('lobbyRoom').style.display='none'; });
+  if(btnLocal) btnLocal.addEventListener('click', ()=>{ Net.online=false; Net.isHost=false; document.getElementById('lobby').classList.remove('show'); document.getElementById('setupOverlay').style.display='grid'; buildNameGrid(); });
+})();
+
+generateSpecialCells(); deck=buildDeck(); discard=[]; buildNameGrid(); buildBoard(); renderAll();
+
+window.__T = {
+  get players(){ return players; },
+  get piecesPerPlayer(){ return piecesPerPlayer; },
+  set piecesPerPlayer(v){ piecesPerPlayer = v; },
+  getClamped(){ return currentPiecesPerPlayer(); },
+  buildPiecesForPlayer,
+  buildNameGrid, startGame,
+  get setupOpen(){ return document.getElementById('setupOverlay').style.display; },
+  get piecesBtns(){ return [...document.querySelectorAll('[data-pieces]')]; },
+};</script>
+</body>
+</html>

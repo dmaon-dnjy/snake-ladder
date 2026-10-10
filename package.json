@@ -1,0 +1,12 @@
+{
+  "name": "snakes-and-ladders-online",
+  "version": "1.0.0",
+  "description": "Snakes & Ladders (Cards & Shooters Edition) with online multiplayer (host/guest rooms).",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "jsdom": "^30.0.1",
+    "ws": "^8.18.0"
+  }
+}
